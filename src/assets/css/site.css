@@ -661,6 +661,10 @@ figcaption {
   color: var(--wine);
   border-color: var(--wine-border);
 }
+.link--arrow {
+  display: inline-block;
+  padding-block: 3px;
+}
 .link--arrow::after {
   content: '→';
   display: inline-block;
@@ -1125,14 +1129,16 @@ figcaption {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--ink-3);
-  white-space: nowrap;
   vertical-align: middle;
 }
 
 /* Inline glossary term: dotted underline, definition on demand. */
 .term {
   border: 0;
-  padding: 0;
+  /* Vertical padding keeps the glossary button at the 24px minimum
+     target size even where it labels a specification row. */
+  padding: 2px 0;
+  display: inline-block;
   background: none;
   font: inherit;
   color: inherit;
@@ -1379,6 +1385,21 @@ figcaption {
   display: flex;
   align-items: center;
   gap: 0;
+}
+
+/* Very narrow screens: the header has to fit 320px without the page
+ * scrolling sideways. The account link is the one item that is fully
+ * duplicated in the menu drawer, so it is the one that goes. */
+@media (max-width: 26em) {
+  .icon-btn {
+    width: 2.5rem;
+  }
+  .icon-btn--account {
+    display: none;
+  }
+  .brand {
+    font-size: var(--step-0);
+  }
 }
 
 /* Mobile navigation drawer */
@@ -1854,8 +1875,13 @@ mark {
 .swatch {
   display: inline-grid;
   place-items: center;
+  /* flex children shrink by default, which would take these under the
+     24px minimum target size on a narrow card. */
+  flex: 0 0 auto;
   width: 1.75rem;
   height: 1.75rem;
+  min-width: 1.75rem;
+  min-height: 1.75rem;
   padding: 0;
   border: 1px solid var(--rule-strong);
   border-radius: 50%;
@@ -2274,6 +2300,16 @@ mark {
   display: grid;
   gap: var(--sp-3);
 }
+/* Grid and flex children default to min-width:auto, which stops them
+ * shrinking below their content and makes an overflow-x container
+ * push the page sideways instead of scrolling inside itself. Every
+ * scrolling child needs this or narrow screens scroll horizontally. */
+.pdp > *,
+.gallery > *,
+.collection-layout > *,
+.checkout-layout > * {
+  min-width: 0;
+}
 .gallery__main {
   position: relative;
   aspect-ratio: 3 / 4;
@@ -2325,6 +2361,8 @@ mark {
   gap: var(--sp-2);
   overflow-x: auto;
   padding-bottom: var(--sp-1);
+  min-width: 0;
+  scrollbar-width: thin;
 }
 @media (min-width: 60em) {
   .gallery {
@@ -2424,6 +2462,8 @@ mark {
 .option-label a {
   font-weight: 400;
   font-size: var(--step--1);
+  display: inline-block;
+  padding-block: 3px;
 }
 
 .includes {
@@ -2432,6 +2472,7 @@ mark {
   background: var(--paper);
   padding: var(--sp-4);
 }
+.includes h2,
 .includes h3 {
   font-family: var(--font-body);
   font-size: var(--step--1);
@@ -2441,6 +2482,7 @@ mark {
   color: var(--ink-3);
   margin-bottom: var(--sp-3);
 }
+.includes ul + h2,
 .includes ul + h3 {
   margin-top: var(--sp-4);
   padding-top: var(--sp-4);
@@ -2502,8 +2544,9 @@ mark {
 }
 .delivery-box__list li {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
-  gap: var(--sp-3);
+  gap: var(--sp-1) var(--sp-3);
   max-width: none;
 }
 .delivery-box__list li + li {
@@ -3051,8 +3094,9 @@ dialog.modal--zoom {
 }
 .line-item__svc li {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
-  gap: var(--sp-3);
+  gap: var(--sp-1) var(--sp-3);
   max-width: none;
 }
 .line-item__foot {

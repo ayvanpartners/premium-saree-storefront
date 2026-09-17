@@ -30,14 +30,34 @@ export function esc(value) {
     .replace(/'/g, '&#39;');
 }
 
+/**
+ * Markup that is already safe to emit.
+ *
+ * It behaves as a string everywhere (template literals call toString),
+ * but `render` recognises it and does not escape it a second time.
+ * This is what stops nested html`` templates being escaped into
+ * visible tag soup — a mistake that is silent until you look at the
+ * page, so the type system has to catch it instead.
+ */
+class Safe {
+  constructor(value) {
+    this.value = value == null ? '' : String(value);
+    this.__raw = true;
+  }
+  toString() {
+    return this.value;
+  }
+}
+
 /** Template tag that escapes interpolations by default.
- * Pass raw() for pre-built markup. */
+ * Anything produced by html() or raw() passes through untouched. */
 export function html(strings, ...values) {
-  return strings.reduce((out, s, i) => {
-    if (i === 0) return s;
-    const v = values[i - 1];
-    return out + render(v) + s;
-  }, '');
+  return raw(
+    strings.reduce((out, s, i) => {
+      if (i === 0) return s;
+      return out + render(values[i - 1]) + s;
+    }, '')
+  );
 }
 
 function render(v) {
@@ -48,8 +68,10 @@ function render(v) {
 }
 
 export function raw(value) {
-  return { __raw: true, value: value == null ? '' : String(value) };
+  return value instanceof Safe ? value : new Safe(value);
 }
+
+export { Safe };
 
 /** Build an attribute string, dropping null/undefined/false. */
 export function attrs(map) {

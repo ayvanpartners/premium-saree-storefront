@@ -379,7 +379,7 @@ export function checkoutPage() {
                     </div>
                     <button class="btn btn--quiet" type="button" data-discount-apply>Apply</button>
                   </div>
-                  <p class="field__error" data-discount-error hidden></p>
+                  <p class="field__error" data-discount-error data-error-for="checkoutDiscount" hidden></p>
                   <p class="field__ok" data-discount-ok hidden></p>
                 </div>
               </div>

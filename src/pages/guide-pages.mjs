@@ -93,6 +93,7 @@ export function guideHubPage() {
   const body = html`
     <section class="section">
       <div class="container">
+        <h2 class="visually-hidden">Guides</h2>
         <div class="grid grid--3">
           ${cards.map(
             (c) => raw(`

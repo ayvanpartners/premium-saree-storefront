@@ -130,13 +130,24 @@ function editDistance(a, b, max = 2) {
   return prev[b.length];
 }
 
+/* Words that mean the customer is asking for an essential rather than
+ * a saree. Without this, "sari for a wedding" ranks the pin set above
+ * the wedding sarees, because every accessory has "Saree" in its name. */
+const TYPE_WORDS = {
+  blouse: ['blouse', 'blouses', 'choli', 'top'],
+  petticoat: ['petticoat', 'petticoats', 'underskirt', 'inskirt'],
+  accessory: ['pin', 'pins', 'shapewear', 'safety'],
+  care: ['wash', 'detergent', 'storage', 'muslin', 'care', 'bag', 'bags']
+};
+
 function productHaystack(p) {
   return {
     name: normalise(p.name),
-    strong: normalise([p.fabricLabel, p.weaveLabel, p.colour.name, p.type].join(' ')),
-    weak: normalise(
-      [p.editorial, p.occasionLabels.join(' '), p.colours.map((c) => c.name).join(' '), (p.tags || []).join(' ')].join(' ')
-    )
+    strong: normalise([p.fabricLabel, p.weaveLabel, p.colour.name].join(' ')),
+    // Occasion is a strong signal of intent, so it scores above the
+    // general description it used to sit in.
+    occasion: normalise(p.occasionLabels.join(' ')),
+    weak: normalise([p.editorial, p.colours.map((c) => c.name).join(' '), (p.tags || []).join(' ')].join(' '))
   };
 }
 
@@ -180,7 +191,8 @@ export function search(data, rawQuery, { limit = 24 } = {}) {
       let best = 0;
       for (const v of variants) {
         if (h.name.includes(v)) best = Math.max(best, h.name.startsWith(v) ? 14 : 10);
-        else if (h.strong.includes(v)) best = Math.max(best, 7);
+        else if (h.strong.includes(v)) best = Math.max(best, 8);
+        else if (h.occasion.includes(v)) best = Math.max(best, 6);
         else if (h.weak.includes(v)) best = Math.max(best, 3);
       }
       // Typo tolerance: compare against individual words, not the whole
@@ -210,6 +222,13 @@ export function search(data, rawQuery, { limit = 24 } = {}) {
     }
 
     if (score > 0 && matchedAll) {
+      // Did the customer actually ask for an essential? If so surface
+      // it; if not, a saree is almost always what they meant.
+      const typeWords = TYPE_WORDS[p.type] || [];
+      const askedForThisType = tokens.some((t) => typeWords.includes(t));
+      if (askedForThisType) score += 9;
+      else if (p.type !== 'saree') score -= 6;
+
       if (p.stock === 'out-of-stock') score -= 3;
       if (p.isNew) score += 1;
       scored.push({ product: p, score });

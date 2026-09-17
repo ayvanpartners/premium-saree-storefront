@@ -58,10 +58,13 @@ export function openDrawer(id, trigger) {
   drawer.removeAttribute('inert');
   if (overlay) {
     overlay.hidden = false;
-    // Next frame so the opacity transition has a starting point.
-    requestAnimationFrame(() => {
-      overlay.dataset.open = 'true';
-    });
+    // Force a reflow so the opacity transition has a starting point,
+    // then set the state synchronously. Doing this on the next
+    // animation frame would be tidier, but requestAnimationFrame does
+    // not fire in a background tab — which would leave the overlay
+    // transparent and click-through while the drawer was open.
+    void overlay.offsetHeight;
+    overlay.dataset.open = 'true';
   }
   lockScroll();
 

@@ -200,7 +200,9 @@ export function validateMeasurement(field, rawValue, unit = 'cm') {
       code: 'low',
       message:
         unit === 'cm'
-          ? `${num}cm looks too small for ${field.label.toLowerCase()}. Did you measure in inches? ${num} inches is ${Math.round(cm)}cm — switch the unit above if so.`
+          ? `${num}cm looks too small for ${field.label.toLowerCase()}. Did you measure in inches? ${num} inches is about ${Math.round(
+              num * 2.54
+            )}cm — switch the unit above and re-enter if so.`
           : `${num} inches looks too small for ${field.label.toLowerCase()}. Please check and re-enter.`
     };
   }

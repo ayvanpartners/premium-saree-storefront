@@ -15,7 +15,7 @@ import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), 'dist');
-const PORT = Number(process.env.PORT || 4321);
+const PORT = Number(process.env.PORT || 4330);
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -56,9 +56,13 @@ const server = createServer(async (req, res) => {
 
 function send(res, status, file, body, req) {
   const ext = extname(file);
+  // Real hosting fingerprints filenames and caches hard. This build
+  // does not, so anything editable is served no-cache — otherwise a
+  // rebuild appears to change nothing until you clear the cache.
+  const longLived = ext === '.woff2' || ext === '.svg';
   const headers = {
     'content-type': TYPES[ext] || 'application/octet-stream',
-    'cache-control': ext === '.html' ? 'no-cache' : 'public, max-age=31536000, immutable',
+    'cache-control': longLived ? 'public, max-age=3600' : 'no-cache',
     // Close to what a sensible host would send.
     'x-content-type-options': 'nosniff'
   };

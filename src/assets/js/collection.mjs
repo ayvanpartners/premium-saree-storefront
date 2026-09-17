@@ -64,8 +64,16 @@ function init() {
     if (!text) return;
     const span = text.querySelector('.check__text, .filter-swatch span:last-child');
     if (!span) return;
-    const label = span.textContent.replace(/\s*\(\d+\)\s*$/, '').split('\n')[0].trim();
-    dynamicLabels[`${input.name}:${input.value}`] = label;
+    // Only the direct text of the label — not the "(12)" count span or
+    // the plain-English hint nested inside it, both of which would
+    // otherwise end up inside a filter chip.
+    const label = Array.from(span.childNodes)
+      .filter((n) => n.nodeType === Node.TEXT_NODE)
+      .map((n) => n.textContent)
+      .join('')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (label) dynamicLabels[`${input.name}:${input.value}`] = label;
   });
 
   applyFromUrl();

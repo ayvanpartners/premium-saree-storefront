@@ -102,7 +102,7 @@ function gallery(product) {
 
       <p class="gallery__caption">
         <span data-gallery-caption>${views[0].label}</span>
-        <span class="nowrap">${raw(sampleTag('Illustration, not a photograph'))}</span>
+        <span>${raw(sampleTag('Illustration, not a photograph'))}</span>
       </p>
     </div>
 
@@ -239,12 +239,12 @@ function sizeTable(product) {
 function includedBlock(product) {
   return html`
     <div class="includes pdp__block">
-      <h3>In the parcel</h3>
+      <h2>In the parcel</h2>
       <ul class="includes--in">
         ${product.included.map((i) => raw(`<li>${esc(i)}</li>`))}
       </ul>
       ${product.excluded.length
-        ? html`<h3>Not included</h3>
+        ? html`<h2>Not included</h2>
             <ul class="includes--out">
               ${product.excluded.map((i) => raw(`<li>${esc(i)}</li>`))}
             </ul>`
@@ -420,7 +420,7 @@ function deliveryBlock(product) {
           });
           return raw(`<li>
             <span>${esc(s.label)}</span>
-            <span class="nowrap"><strong>${esc(formatWindow(e.earliest, e.latest))}</strong> · ${
+            <span><strong>${esc(formatWindow(e.earliest, e.latest))}</strong> · ${
               s.freeOver ? `${formatMoney(s.price)}, free over ${formatMoney(s.freeOver)}` : formatMoney(s.price)
             }</span>
           </li>`);

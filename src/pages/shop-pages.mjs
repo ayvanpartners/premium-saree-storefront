@@ -59,7 +59,7 @@ export function bagPage() {
                   </div>
                   <button class="btn btn--quiet" type="button" data-discount-apply>Apply</button>
                 </div>
-                <p class="field__error" data-discount-error hidden></p>
+                <p class="field__error" data-discount-error data-error-for="discount" hidden></p>
                 <p class="field__ok" data-discount-ok hidden></p>
                 <p class="xs muted mt-2">
                   Demonstration codes: <code>WELCOME10</code>, <code>FREEPOST</code> (over £50),
@@ -282,7 +282,8 @@ export function accountPage() {
         )}
       </div>
 
-      <div class="grid grid--2 mt-6">
+      <h2 class="h3 mt-7 mb-4">What you can do without an account</h2>
+      <div class="grid grid--2">
         <div class="guide-card" style="cursor:default">
           <h3 class="h3">Track an order</h3>
           <p>Enter an order number and postcode. No account required — this works for guest orders too.</p>

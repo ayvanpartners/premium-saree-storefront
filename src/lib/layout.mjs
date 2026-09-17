@@ -106,7 +106,7 @@ function headerMarkup(activeKey) {
           >
             ${raw(icon('search'))}<span class="visually-hidden">Search</span>
           </button>
-          <a class="icon-btn" href="${url('/account/')}">
+          <a class="icon-btn icon-btn--account" href="${url('/account/')}">
             ${raw(icon('user'))}<span class="visually-hidden">Account</span>
           </a>
           <a class="icon-btn" href="${url('/wishlist/')}">
