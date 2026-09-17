@@ -335,4 +335,97 @@ export function collectionPage(key) {
   });
 }
 
+/* ------------------------------------------------------------------ *
+ * Occasion landing page.
+ *
+ * The "Occasion" navigation item needs somewhere to go. Pointing it at
+ * a second copy of the full saree list would be two URLs with
+ * identical content, so this is a chooser: the five occasions, what
+ * each one actually means, and a handful of pieces from each.
+ * ------------------------------------------------------------------ */
+export function occasionLandingPage() {
+  const sarees = products.filter((p) => p.type === 'saree');
+
+  const body = html`
+    <div class="container collection-head">
+      ${raw(
+        breadcrumb([
+          { label: 'Home', href: '/' },
+          { label: 'Shop by occasion' }
+        ])
+      )}
+      <h1 class="h1">Shop by occasion</h1>
+      <p class="lede mt-3">Start from where you are wearing it.</p>
+      <p class="small muted mt-3" style="max-width:62ch">
+        The occasion decides the weight, the palette and how long you need to be comfortable — far
+        more than the price does. Pick one and we will narrow the fabrics and weights to suit it.
+      </p>
+    </div>
+
+    <div class="container">
+      <div class="occasion-grid mb-6">
+        ${occasions.map(
+          (o) => raw(`
+          <a class="occasion-tile" href="${url(`/collections/${o.id}/`)}">
+            <img src="${url(`/assets/img/occasions/${o.id}.svg`)}" alt="" width="800" height="800" loading="lazy" decoding="async">
+            <span class="occasion-tile__text">
+              <strong>${esc(o.label)}</strong>
+              <span>${esc(sarees.filter((p) => p.occasions.includes(o.id)).length)} pieces</span>
+            </span>
+          </a>`)
+        )}
+      </div>
+    </div>
+
+    ${occasions.map((o, idx) => {
+      const items = sarees.filter((p) => p.occasions.includes(o.id)).slice(0, 4);
+      if (!items.length) return '';
+      return html`
+        <section class="section${idx % 2 === 1 ? ' section--sand' : ''}">
+          <div class="container">
+            ${raw(
+              sectionHead({
+                eyebrow: o.label,
+                title: o.blurb,
+                body: o.plain,
+                link: { label: `All ${o.label.toLowerCase()} sarees`, href: `/collections/${o.id}/` }
+              })
+            )}
+            <div class="product-grid product-grid--4">
+              ${items.map((p, i) => raw(productCard(p, { index: i })))}
+            </div>
+          </div>
+        </section>
+      `;
+    })}
+
+    <section class="section">
+      <div class="container container--narrow">
+        ${raw(
+          notice(
+            `<p><strong>Shopping to a fixed date?</strong></p>
+             <p>
+               Every product page shows a delivery window calculated from that item's own stock
+               status and any tailoring you add, rather than a generic promise. If the date is
+               tight, filter to <a href="${url('/collections/sarees/?stock=in-stock')}">in stock</a>,
+               skip fall and pico, and choose named-day delivery at checkout.
+             </p>
+             <p class="xs">${sampleTag('Sample fulfilment data')}</p>`,
+            { tone: 'info', iconName: 'truck' }
+          )
+        )}
+      </div>
+    </section>
+  `;
+
+  return page({
+    title: 'Shop by Occasion',
+    description:
+      'Wedding guest, bridal, festive, party and everyday sarees — what each occasion calls for, and a selection from each.',
+    path: '/collections/occasion/',
+    activeKey: 'occasion',
+    body
+  });
+}
+
 export { PRICE_BANDS };

@@ -31,7 +31,7 @@ const imagery = await import('./src/lib/imagery.mjs');
 const { galleryViews, defaultColour, imgPath } = await import('./src/lib/components.mjs');
 
 const { homePage } = await import('./src/pages/home.mjs');
-const { collectionPage } = await import('./src/pages/collection.mjs');
+const { collectionPage, occasionLandingPage } = await import('./src/pages/collection.mjs');
 const { productPage } = await import('./src/pages/product.mjs');
 const shop = await import('./src/pages/shop-pages.mjs');
 const checkout = await import('./src/pages/checkout-pages.mjs');
@@ -233,7 +233,8 @@ async function page(path, html) {
 await page('index.html', homePage());
 
 for (const key of Object.keys(collections)) {
-  await page(`collections/${key}`, collectionPage(key));
+  // "Occasion" is a chooser, not a second copy of the full saree list.
+  await page(`collections/${key}`, key === 'occasion' ? occasionLandingPage() : collectionPage(key));
 }
 
 for (const product of products) {
