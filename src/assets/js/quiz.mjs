@@ -87,13 +87,19 @@ function pick(data, a) {
     .slice(0, 6);
 }
 
+/** "a, b and c" rather than "a and b and c". */
+function sentenceList(items) {
+  if (items.length <= 1) return items.join('');
+  return `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
+}
+
 function reasonsFor(p, a, easyFabrics) {
   const out = [];
   if (p.readyToWear) out.push('Ready to wear, so there is no draping to learn');
   else if (p.drapeDifficulty === 1) out.push('The easiest kind of fabric to drape — it grips itself');
   else if (p.drapeDifficulty === 2) out.push('Forgiving to drape, a handful of pins is enough');
   if (a.warmth === 'warm' && p.weightGsm && p.weightGsm <= 150) out.push('Light and breathable for a warm room');
-  if (p.occasionLabels.length) out.push(`Suits ${p.occasionLabels.join(' and ').toLowerCase()}`);
+  if (p.occasionLabels.length) out.push(`Suits ${sentenceList(p.occasionLabels).toLowerCase()}`);
   if (p.blousePieceIncluded) out.push('Blouse piece included');
   if (p.stock === 'in-stock') out.push('In stock, so it ships next working day');
   return out.slice(0, 4);
