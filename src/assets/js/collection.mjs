@@ -77,7 +77,10 @@ function init() {
   });
 
   applyFromUrl();
-  restoreScroll();
+  // Read the saved position now, but scroll after the first apply() has
+  // put the grid into its final shape — otherwise we would scroll
+  // against a layout that is about to change.
+  const pendingScroll = readSavedScroll();
 
   form.addEventListener('change', () => {
     shown = PAGE_SIZE;
@@ -167,6 +170,25 @@ function init() {
   });
 
   apply({ pushUrl: false });
+
+  if (pendingScroll != null) {
+    // Cards reserve their height with aspect-ratio, so the layout is
+    // already final here and this lands in the right place without
+    // waiting for images. No requestAnimationFrame: it does not fire
+    // in a background tab, which would silently skip the restore.
+    window.scrollTo({ top: pendingScroll, behavior: 'instant' });
+    // Images that finish late can still nudge things, so correct once
+    // everything has settled.
+    window.addEventListener(
+      'load',
+      () => {
+        if (Math.abs(window.scrollY - pendingScroll) > 4) {
+          window.scrollTo({ top: pendingScroll, behavior: 'instant' });
+        }
+      },
+      { once: true }
+    );
+  }
 
   /* ------------------------------------------------------------------ */
 
@@ -415,21 +437,23 @@ function init() {
     }
   }
 
-  function restoreScroll() {
+  /** Returns the scroll position to restore, or null. Also restores how
+   * many products were on screen, so "load more" is not undone by
+   * looking at one product. */
+  function readSavedScroll() {
     try {
       const raw = sessionStorage.getItem(STATE_KEY);
-      if (!raw) return;
-      const state = JSON.parse(raw);
-      if (state.path !== location.pathname) return;
-      // Only restore when arriving back with the same query.
-      if (state.search && state.search !== location.search) return;
-      shown = Math.max(PAGE_SIZE, Number(state.shown) || PAGE_SIZE);
-      requestAnimationFrame(() => {
-        window.scrollTo({ top: Number(state.scrollY) || 0, behavior: 'instant' });
-      });
+      if (!raw) return null;
       sessionStorage.removeItem(STATE_KEY);
+      const state = JSON.parse(raw);
+      if (state.path !== location.pathname) return null;
+      // Only restore when arriving back at the same filtered view.
+      if ((state.search || '') !== (location.search || '')) return null;
+      shown = Math.max(PAGE_SIZE, Number(state.shown) || PAGE_SIZE);
+      const y = Number(state.scrollY);
+      return Number.isFinite(y) && y > 0 ? y : null;
     } catch {
-      /* nothing to restore */
+      return null;
     }
   }
 }

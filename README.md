@@ -125,6 +125,10 @@ Driven through a real browser against the built output, not asserted from the so
 | Interactive targets under the WCAG 2.2 24×24 minimum | 0 |
 | Text contrast below AA (computed, live pages) | 0 of 748 text nodes on home, product and search |
 
+Filters and scroll position are preserved when returning from a product page: the filter
+state travels in the URL and the scroll offset in `sessionStorage`, verified restoring to
+the exact pixel.
+
 **Bugs this testing found and fixed** — the significant one: nested `html` templates were
 being HTML-escaped, which silently emptied every collection grid. It was invisible in the
 source and obvious in the output, which is why the build now checks the output.
