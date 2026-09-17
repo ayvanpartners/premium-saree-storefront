@@ -152,11 +152,21 @@ function slubTexture(id, base, rng) {
     <rect width="120" height="120" fill="${base}"/>${lines}</pattern>`;
 }
 
-function buildPattern(product, rng) {
-  const pal = product.palette;
+/** Palette for a colourway. The named colour drives the ground; the
+ * accent and highlight tones carry over from the product so a border
+ * still reads as a border in every variant. */
+export function paletteFor(product, colourSlug) {
+  const colour = product.colours.find((c) => c.slug === colourSlug);
+  if (!colour || colour.slug === product.colours[0].slug) return product.palette;
+  const base = colour.hex;
+  return [base, shade(base, 0.14), product.palette[2], product.palette[3], shade(base, -0.26)];
+}
+
+function buildPattern(product, rng, palette = product.palette, uidSuffix = '') {
+  const pal = palette;
   const [c0, c1, c2, c3, c4] = pal;
   const family = product.patternFamily;
-  const uid = product.id.replace(/[^a-z0-9]/gi, '');
+  const uid = (product.id + uidSuffix).replace(/[^a-z0-9]/gi, '');
   const ink = inkOn(c0, pal);
   const defs = [];
   let ground = `url(#g${uid})`;
@@ -400,31 +410,40 @@ const BODIES = [
 ];
 
 /* ---------------------------- View: drape -------------------------- *
- * A stylised standing figure wearing the saree. No facial features:
- * this is an illustration of drape and cloth, not a portrait.
+ * A stylised standing figure wearing the saree, built from the real
+ * geometry of a Nivi drape: pleats gathered at the front of the waist,
+ * the remaining length carried across the body from the right hip and
+ * over the left shoulder, with the pallu falling down the back.
+ *
+ * No facial features. This is an illustration of cloth and drape, not
+ * a portrait of anybody.
  * ------------------------------------------------------------------ */
-export function drapeView(product, variantIndex = 0) {
-  const rng = makeRng(product.id + 'drape');
-  const pat = buildPattern(product, rng);
-  const body = BODIES[(hashIndex(product.id) + variantIndex) % BODIES.length];
-  const skin = SKIN[(hashIndex(product.id) + variantIndex * 2) % SKIN.length];
-  const hair = HAIR[(hashIndex(product.id) + variantIndex) % HAIR.length];
-  const grey = hair === '#8A8480' || hair === '#5A5350';
+export function drapeView(product, variantIndex = 0, colour = null) {
+  const rng = makeRng(product.id + 'drape' + (colour || ''));
+  const pat = buildPattern(product, rng, paletteFor(product, colour), colour || '');
+  const pick = hashIndex(product.id) + variantIndex;
+  const body = BODIES[pick % BODIES.length];
+  const skin = SKIN[(pick * 3 + 1) % SKIN.length];
+  const hairTone = HAIR[(pick * 2) % HAIR.length];
+  const style = HAIRSTYLES[pick % HAIRSTYLES.length];
 
   const cx = 450;
-  const headR = 52;
-  const topY = 150;
-  const shoulderY = topY + headR * 2 + 36;
-  const waistY = shoulderY + 210 * body.height;
+  const headR = 46;
+  const headY = 170;
+  const shoulderY = 256;
+  const torso = 232 * body.height;
+  const blouseHem = shoulderY + torso * 0.62;
+  const waistY = shoulderY + torso;
   const hemY = 1104;
+
   const sh = body.shoulder;
-  const wa = body.waist;
+  const wa = body.waist * 0.92;
   const hp = body.hip;
+  const hemHalf = Math.min(hp * 1.45, 400);
 
   // Pleated skirt: a fan of panels from waist to hem.
-  const pleats = [];
-  const panels = 11;
-  const hemHalf = hp * 1.34;
+  const panels = 12;
+  let pleats = '';
   for (let i = 0; i < panels; i++) {
     const t0 = i / panels;
     const t1 = (i + 1) / panels;
@@ -432,81 +451,160 @@ export function drapeView(product, variantIndex = 0) {
     const xw1 = cx - wa + t1 * wa * 2;
     const xh0 = cx - hemHalf + t0 * hemHalf * 2;
     const xh1 = cx - hemHalf + t1 * hemHalf * 2;
-    const sag = Math.sin(t0 * Math.PI) * 16;
-    pleats.push(
-      `<path d="M${r2(xw0)} ${r2(waistY)} L${r2(xw1)} ${r2(waistY)} L${r2(xh1)} ${r2(hemY + sag)} L${r2(xh0)} ${r2(hemY + sag)} Z"
-        fill="${pat.ground}" ${i % 2 ? `opacity=".93"` : ''}/>
-       <path d="M${r2(xw0)} ${r2(waistY)} L${r2(xh0)} ${r2(hemY + sag)}" stroke="${pat.ink}" stroke-width="1.1" opacity=".16"/>`
-    );
+    const sag0 = Math.sin(t0 * Math.PI) * 18;
+    const sag1 = Math.sin(t1 * Math.PI) * 18;
+    pleats += '<path d="M' + r2(xw0) + ' ' + r2(waistY) + ' L' + r2(xw1) + ' ' + r2(waistY) +
+      ' L' + r2(xh1) + ' ' + r2(hemY + sag1) + ' L' + r2(xh0) + ' ' + r2(hemY + sag0) + ' Z" fill="' +
+      pat.ground + '" opacity="' + (i % 2 ? 0.94 : 1) + '"/>';
+    if (i > 0) {
+      pleats += '<path d="M' + r2(xw0) + ' ' + r2(waistY) + ' L' + r2(xh0) + ' ' + r2(hemY + sag0) +
+        '" stroke="' + pat.ink + '" stroke-width="1.2" opacity=".14" fill="none"/>';
+    }
   }
 
-  // Pallu: over the left shoulder, falling behind the arm.
-  const pallu = `
-    <path d="M${r2(cx - sh * 0.86)} ${r2(shoulderY + 6)}
-      C${r2(cx - sh * 1.18)} ${r2(shoulderY + 250)} ${r2(cx - sh * 1.3)} ${r2(waistY + 300)} ${r2(cx - sh * 1.04)} ${r2(hemY - 40)}
-      L${r2(cx - sh * 0.42)} ${r2(hemY - 66)}
-      C${r2(cx - sh * 0.6)} ${r2(waistY + 190)} ${r2(cx - sh * 0.52)} ${r2(shoulderY + 210)} ${r2(cx - sh * 0.2)} ${r2(shoulderY + 30)} Z"
-      fill="${pat.pallu}"/>
-    <path d="M${r2(cx - sh * 1.04)} ${r2(hemY - 40)} L${r2(cx - sh * 0.42)} ${r2(hemY - 66)}"
-      stroke="${pat.border}" stroke-width="26" opacity=".95" stroke-linecap="square"/>`;
+  const hemBorder =
+    '<path d="M' + r2(cx - hemHalf) + ' ' + r2(hemY) + ' Q' + cx + ' ' + r2(hemY + 36) + ' ' + r2(cx + hemHalf) + ' ' + r2(hemY) +
+    ' L' + r2(cx + hemHalf) + ' ' + r2(hemY + 34) + ' Q' + cx + ' ' + r2(hemY + 70) + ' ' + r2(cx - hemHalf) + ' ' + r2(hemY + 34) +
+    ' Z" fill="' + pat.border + '"/>';
 
-  // Upper drape crossing the torso from right hip to left shoulder.
-  const upper = `
-    <path d="M${r2(cx + wa * 0.9)} ${r2(waistY - 8)}
-      C${r2(cx + sh * 0.5)} ${r2(waistY - 90)} ${r2(cx - sh * 0.1)} ${r2(shoulderY + 70)} ${r2(cx - sh * 0.78)} ${r2(shoulderY + 4)}
-      L${r2(cx - sh * 0.62)} ${r2(shoulderY + 62)}
-      C${r2(cx - sh * 0.1)} ${r2(shoulderY + 132)} ${r2(cx + sh * 0.36)} ${r2(waistY - 22)} ${r2(cx + wa * 0.86)} ${r2(waistY + 34)} Z"
-      fill="${pat.ground}" opacity=".97"/>`;
+  // Pallu falling down the back, past the left shoulder.
+  const pallu =
+    '<path d="M' + r2(cx - sh * 0.98) + ' ' + r2(shoulderY + 4) +
+    ' C' + r2(cx - sh * 1.5) + ' ' + r2(shoulderY + 260) + ' ' + r2(cx - sh * 1.66) + ' ' + r2(waistY + 330) + ' ' + r2(cx - sh * 1.42) + ' ' + r2(hemY - 96) +
+    ' L' + r2(cx - sh * 0.38) + ' ' + r2(hemY - 56) +
+    ' C' + r2(cx - sh * 0.52) + ' ' + r2(waistY + 220) + ' ' + r2(cx - sh * 0.48) + ' ' + r2(shoulderY + 250) + ' ' + r2(cx - sh * 0.28) + ' ' + r2(shoulderY + 84) +
+    ' Z" fill="' + pat.pallu + '"/>' +
+    '<path d="M' + r2(cx - sh * 1.42) + ' ' + r2(hemY - 96) + ' L' + r2(cx - sh * 0.38) + ' ' + r2(hemY - 56) +
+    ' L' + r2(cx - sh * 0.4) + ' ' + r2(hemY - 12) + ' L' + r2(cx - sh * 1.44) + ' ' + r2(hemY - 52) + ' Z" fill="' + pat.border + '"/>';
 
-  const hairShape = grey
-    ? `<path d="M${cx - headR - 6} ${topY + headR * 0.7} a${headR + 6} ${headR + 6} 0 0 1 ${(headR + 6) * 2} 0 v-6 a${headR + 6} ${headR + 10} 0 0 0 -${(headR + 6) * 2} 0 Z" fill="${hair}"/>
-       <ellipse cx="${cx}" cy="${topY + headR * 0.34}" rx="${headR + 4}" ry="${headR * 0.66}" fill="${hair}"/>`
-    : `<ellipse cx="${cx}" cy="${topY + headR * 0.3}" rx="${headR + 5}" ry="${headR * 0.74}" fill="${hair}"/>
-       <circle cx="${cx + headR * 0.94}" cy="${topY + headR * 1.24}" r="${r2(headR * 0.42)}" fill="${hair}"/>`;
+  // The length carried across the front, right hip to left shoulder.
+  // This is a broad swathe of cloth, not a sash: it covers most of the
+  // left side of the chest and gathers at the right waist.
+  const sash =
+    '<path d="M' + r2(cx + wa * 1.02) + ' ' + r2(waistY - 18) +
+    ' C' + r2(cx + sh * 0.5) + ' ' + r2(waistY - 96) + ' ' + r2(cx - sh * 0.36) + ' ' + r2(shoulderY + 86) + ' ' + r2(cx - sh * 1.02) + ' ' + r2(shoulderY - 10) +
+    ' L' + r2(cx - sh * 0.24) + ' ' + r2(shoulderY + 30) +
+    ' C' + r2(cx - sh * 0.02) + ' ' + r2(shoulderY + 150) + ' ' + r2(cx + sh * 0.46) + ' ' + r2(waistY - 40) + ' ' + r2(cx + wa * 1.0) + ' ' + r2(waistY + 52) +
+    ' Z" fill="' + pat.ground + '"/>' +
+    // Selvedge running along the leading edge of the drape.
+    '<path d="M' + r2(cx - sh * 1.02) + ' ' + r2(shoulderY - 10) +
+    ' C' + r2(cx - sh * 0.36) + ' ' + r2(shoulderY + 86) + ' ' + r2(cx + sh * 0.5) + ' ' + r2(waistY - 96) + ' ' + r2(cx + wa * 1.02) + ' ' + r2(waistY - 18) +
+    '" stroke="' + pat.border + '" stroke-width="13" fill="none" stroke-linecap="round"/>';
 
-  const bodyMarkup = `
-  <ellipse cx="${cx}" cy="${hemY + 44}" rx="${r2(hemHalf * 1.02)}" ry="26" fill="#1C1A19" opacity=".07"/>
-  <!-- neck, head -->
-  <rect x="${r2(cx - 19)}" y="${r2(topY + headR * 1.5)}" width="38" height="58" rx="16" fill="${skin}"/>
-  <circle cx="${cx}" cy="${topY + headR}" r="${headR}" fill="${skin}"/>
-  ${hairShape}
-  <!-- arms -->
-  <path d="M${r2(cx + sh * 0.82)} ${r2(shoulderY + 18)} C${r2(cx + sh * 1.05)} ${r2(shoulderY + 150)} ${r2(cx + sh * 0.96)} ${r2(waistY + 60)} ${r2(cx + sh * 0.72)} ${r2(waistY + 118)}"
-    stroke="${skin}" stroke-width="34" fill="none" stroke-linecap="round"/>
-  <path d="M${r2(cx - sh * 0.82)} ${r2(shoulderY + 18)} C${r2(cx - sh * 1.0)} ${r2(shoulderY + 150)} ${r2(cx - sh * 0.9)} ${r2(waistY + 60)} ${r2(cx - sh * 0.66)} ${r2(waistY + 110)}"
-    stroke="${skin}" stroke-width="34" fill="none" stroke-linecap="round"/>
-  <!-- blouse -->
-  <path d="M${r2(cx - sh * 0.84)} ${r2(shoulderY)} Q${cx} ${r2(shoulderY - 26)} ${r2(cx + sh * 0.84)} ${r2(shoulderY)}
-    L${r2(cx + wa * 0.94)} ${r2(waistY - 46)} L${r2(cx - wa * 0.94)} ${r2(waistY - 46)} Z" fill="${pat.border}"/>
-  <path d="M${r2(cx - 30)} ${r2(shoulderY - 6)} a30 26 0 0 0 60 0" fill="${skin}" opacity=".95"/>
-  <!-- midriff -->
-  <rect x="${r2(cx - wa * 0.9)}" y="${r2(waistY - 48)}" width="${r2(wa * 1.8)}" height="52" fill="${skin}"/>
-  ${pleats.join('')}
-  ${upper}
-  ${pallu}
-  <!-- hem border -->
-  <path d="M${r2(cx - hemHalf)} ${r2(hemY + 8)} Q${cx} ${r2(hemY + 30)} ${r2(cx + hemHalf)} ${r2(hemY + 8)}"
-    stroke="${pat.border}" stroke-width="30" fill="none" opacity=".95"/>`;
+  const hair = hairMarkup(style, cx, headY, headR, hairTone);
+
+  // Arms taper from shoulder to wrist, with a hand at the end, so they
+  // read as limbs rather than bars.
+  const arm = (side) => {
+    const x0 = cx + side * sh * 0.82;
+    const x1 = cx + side * sh * 1.04;
+    const x2 = cx + side * sh * 0.78;
+    const y2 = waistY + 128;
+    return (
+      '<path d="M' + r2(x0) + ' ' + r2(shoulderY + 10) +
+      ' C' + r2(x1) + ' ' + r2(shoulderY + 150) + ' ' + r2(x1) + ' ' + r2(waistY + 30) + ' ' + r2(x2) + ' ' + r2(y2) +
+      '" stroke="' + skin + '" stroke-width="30" fill="none" stroke-linecap="round"/>' +
+      '<path d="M' + r2(x0) + ' ' + r2(shoulderY + 10) +
+      ' C' + r2(x1) + ' ' + r2(shoulderY + 150) + ' ' + r2(x1) + ' ' + r2(waistY + 30) + ' ' + r2(x2) + ' ' + r2(y2) +
+      '" stroke="' + shade(skin, -0.08) + '" stroke-width="30" fill="none" stroke-linecap="round" opacity=".0"/>' +
+      '<ellipse cx="' + r2(x2) + '" cy="' + r2(y2 + 16) + '" rx="13" ry="18" fill="' + skin + '"/>'
+    );
+  };
+
+  const markup = [
+    '<ellipse cx="' + cx + '" cy="' + r2(hemY + 88) + '" rx="' + r2(hemHalf * 0.98) + '" ry="22" fill="#1C1A19" opacity=".07"/>',
+    hair.behind,
+    pallu,
+    pleats,
+    hemBorder,
+    // Arms first, so the blouse covers the shoulder joint cleanly.
+    arm(1),
+    arm(-1),
+    // Midriff, then the blouse over it.
+    '<rect x="' + r2(cx - wa * 0.86) + '" y="' + r2(blouseHem - 6) + '" width="' + r2(wa * 1.72) + '" height="' + r2(waistY - blouseHem + 14) + '" fill="' + skin + '"/>',
+    '<path d="M' + r2(cx - sh * 0.9) + ' ' + r2(shoulderY) + ' Q' + cx + ' ' + r2(shoulderY - 30) + ' ' + r2(cx + sh * 0.9) + ' ' + r2(shoulderY) +
+      ' L' + r2(cx + wa * 0.9) + ' ' + r2(blouseHem) + ' L' + r2(cx - wa * 0.9) + ' ' + r2(blouseHem) + ' Z" fill="' + pat.border + '"/>',
+    '<path d="M' + r2(cx - 32) + ' ' + r2(shoulderY - 10) + ' a32 27 0 0 0 64 0" fill="' + skin + '"/>',
+    // Neck and head.
+    '<rect x="' + r2(cx - 20) + '" y="' + r2(headY + headR - 14) + '" width="40" height="' + r2(shoulderY - headY - headR + 20) + '" rx="17" fill="' + skin + '"/>',
+    hair.front,
+    // Face drawn back over the hair disc, so the hair reads as a crown
+    // and side framing rather than a mask.
+    '<ellipse cx="' + cx + '" cy="' + r2(headY + 7) + '" rx="' + r2(headR * 0.83) + '" ry="' + r2(headR * 0.93) + '" fill="' + skin + '"/>',
+    // Arms hanging at the sides.
+    arm(1),
+    arm(-1),
+    sash,
+    hair.plait
+  ].join('\n  ');
 
   return svgDoc({
-    title: `${product.name}, illustrated drape`,
-    desc: `Vector illustration of ${body.label} wearing the ${product.name}. The saree is shown in ${product.colour.name}, draped with pleats at the front and the pallu over the left shoulder. This is original artwork, not a photograph.`,
+    title: product.name + ', illustrated drape',
+    desc:
+      'Vector illustration of ' + body.label + ' wearing the ' + product.name + ' in ' + colourName(product, colour) +
+      '. The saree is shown draped in the common Nivi style: pleats gathered at the front of the waist, the remaining length carried across the body from the right hip and over the left shoulder, and the pallu falling down the back. Original artwork, not a photograph.',
     defs: pat.defs,
-    body: bodyMarkup,
+    body: markup,
     bg: '#F3EEE6'
   });
 }
 
-function hashIndex(s) {
-  let n = 0;
-  for (let i = 0; i < s.length; i++) n = (n * 31 + s.charCodeAt(i)) % 9973;
-  return n;
+/* Hairstyles, so the figures are not one person repeated. Returned as
+ * layers because a low bun sits behind the head and a plait in front. */
+const HAIRSTYLES = ['bun', 'plait', 'short', 'grey-bun', 'plait'];
+
+function hairMarkup(style, cx, headY, headR, tone) {
+  const colour = style === 'grey-bun' ? '#9A938C' : tone;
+  // The reliable flat-illustration trick: a hair disc slightly larger
+  // than the head, with the face drawn back over it. The hair then
+  // frames the face instead of masking it, at any size.
+  const cap =
+    '<circle cx="' + cx + '" cy="' + r2(headY - 5) + '" r="' + r2(headR + 6) + '" fill="' + colour + '"/>';
+  const face = (skinless) => skinless;
+
+  if (style === 'short') {
+    return {
+      behind: '',
+      front:
+        cap +
+        '<path d="M' + r2(cx - headR - 6) + ' ' + r2(headY - 2) +
+        ' q-4 ' + r2(headR * 0.85) + ' 10 ' + r2(headR * 1.0) + ' l14 -10 q-12 ' + r2(-headR * 0.5) + ' -6 ' + r2(-headR * 0.66) + ' Z" fill="' + colour + '"/>' +
+        '<path d="M' + r2(cx + headR + 6) + ' ' + r2(headY - 2) +
+        ' q4 ' + r2(headR * 0.85) + ' -10 ' + r2(headR * 1.0) + ' l-14 -10 q12 ' + r2(-headR * 0.5) + ' 6 ' + r2(-headR * 0.66) + ' Z" fill="' + colour + '"/>',
+      plait: ''
+    };
+  }
+
+  if (style === 'plait') {
+    const px = cx + headR * 0.78;
+    const py = headY + headR * 0.85;
+    let knots = '';
+    for (let i = 0; i < 5; i++) {
+      const t = i / 4;
+      knots +=
+        '<ellipse cx="' + r2(px + t * 26) + '" cy="' + r2(py + 52 + t * 150) + '" rx="' + r2(16 - t * 5) +
+        '" ry="' + r2(22 - t * 6) + '" fill="' + colour + '" opacity="' + (i % 2 ? 0.88 : 1) + '"/>';
+    }
+    return {
+      behind: '',
+      front: cap,
+      plait: knots + '<path d="M' + r2(px + 26) + ' ' + r2(py + 208) + ' l8 26 l-18 -4 Z" fill="' + colour + '"/>'
+    };
+  }
+
+  // Low bun at the nape, sitting behind the head and shoulders.
+  return {
+    behind:
+      '<circle cx="' + r2(cx + headR * 0.92) + '" cy="' + r2(headY + headR * 1.0) + '" r="' + r2(headR * 0.46) + '" fill="' + colour + '"/>',
+    front: cap,
+    plait: ''
+  };
 }
 
 /* ---------------------- View: flat (front / back) ------------------ */
-export function flatView(product, side = 'front') {
-  const rng = makeRng(product.id + 'flat' + side);
-  const pat = buildPattern(product, rng);
+export function flatView(product, side = 'front', colour = null) {
+  const rng = makeRng(product.id + 'flat' + side + (colour || ''));
+  const pat = buildPattern(product, rng, paletteFor(product, colour), side + (colour || ''));
   const m = 74;
   const x = m;
   const w = W - m * 2;
@@ -548,9 +646,9 @@ export function flatView(product, side = 'front') {
 }
 
 /* --------------------- View: border / pallu detail ----------------- */
-export function detailView(product, kind = 'border') {
-  const rng = makeRng(product.id + kind);
-  const pat = buildPattern(product, rng);
+export function detailView(product, kind = 'border', colour = null) {
+  const rng = makeRng(product.id + kind + (colour || ''));
+  const pat = buildPattern(product, rng, paletteFor(product, colour), kind + (colour || ''));
   const isBorder = kind === 'border';
 
   const body = isBorder
@@ -582,32 +680,34 @@ export function detailView(product, kind = 'border') {
   });
 }
 
-/* ------------------------- View: fabric macro ---------------------- */
-export function macroView(product) {
-  const rng = makeRng(product.id + 'macro');
-  const pat = buildPattern(product, rng);
-  const [c0] = product.palette;
-  // Individual threads at high magnification.
-  let threads = '';
+/* ------------------------- View: fabric macro ---------------------- *
+ * Threads are drawn as one small tiled <pattern> rather than thousands
+ * of individual rects: visually identical, about fifty times smaller.
+ * ------------------------------------------------------------------ */
+export function macroView(product, colour = null) {
+  const rng = makeRng(product.id + 'macro' + (colour || ''));
+  const palette = paletteFor(product, colour);
+  const pat = buildPattern(product, rng, palette, 'macro' + (colour || ''));
+  const [c0] = palette;
   const pitch = 22;
-  for (let y = 0; y < H / pitch + 1; y++) {
-    threads += `<rect y="${r2(y * pitch)}" width="${W}" height="${r2(pitch * 0.52)}" fill="${shade(c0, -0.09)}" opacity=".55"/>`;
-  }
-  for (let x = 0; x < W / pitch + 1; x++) {
-    for (let y = 0; y < H / pitch + 1; y++) {
-      if ((x + y) % 2 === 0) {
-        threads += `<rect x="${r2(x * pitch)}" y="${r2(y * pitch)}" width="${r2(pitch * 0.52)}" height="${r2(pitch * 0.52)}" fill="${shade(c0, 0.09)}" opacity=".6" rx="2"/>`;
-      }
-    }
-  }
-  const body = `<rect width="${W}" height="${H}" fill="${pat.ground}"/>
-    <g>${threads}</g>
-    <rect width="${W}" height="${H}" fill="url(#vig)" opacity=".5"/>`;
+  const half = r2(pitch * 0.52);
+
   const defs =
     pat.defs +
-    `<radialGradient id="vig" cx="0.5" cy="0.45" r="0.75">
+    `<pattern id="thread" width="${pitch * 2}" height="${pitch * 2}" patternUnits="userSpaceOnUse">
+      <rect width="${pitch * 2}" height="${pitch * 2}" fill="${c0}"/>
+      <rect y="0" width="${pitch * 2}" height="${half}" fill="${shade(c0, -0.09)}" opacity=".55"/>
+      <rect y="${pitch}" width="${pitch * 2}" height="${half}" fill="${shade(c0, -0.09)}" opacity=".55"/>
+      <rect x="0" y="0" width="${half}" height="${half}" rx="2" fill="${shade(c0, 0.09)}" opacity=".6"/>
+      <rect x="${pitch}" y="${pitch}" width="${half}" height="${half}" rx="2" fill="${shade(c0, 0.09)}" opacity=".6"/>
+    </pattern>
+    <radialGradient id="vig" cx="0.5" cy="0.45" r="0.75">
       <stop offset="0.5" stop-color="#1C1A19" stop-opacity="0"/><stop offset="1" stop-color="#1C1A19" stop-opacity=".3"/>
     </radialGradient>`;
+
+  const body = `<rect width="${W}" height="${H}" fill="${pat.ground}"/>
+    <rect width="${W}" height="${H}" fill="url(#thread)" opacity=".92"/>
+    <rect width="${W}" height="${H}" fill="url(#vig)" opacity=".5"/>`;
 
   return svgDoc({
     title: `${product.name}, fabric at magnification`,
@@ -618,9 +718,9 @@ export function macroView(product) {
 }
 
 /* ------------------------ View: blouse piece ----------------------- */
-export function blouseView(product) {
-  const rng = makeRng(product.id + 'blouse');
-  const pat = buildPattern(product, rng);
+export function blouseView(product, colour = null) {
+  const rng = makeRng(product.id + 'blouse' + (colour || ''));
+  const pat = buildPattern(product, rng, paletteFor(product, colour), 'blouse' + (colour || ''));
   const stitched = product.type === 'blouse' || product.blousePiece.stitched;
 
   const body = stitched
@@ -798,3 +898,16 @@ export function anatomyDiagram() {
 }
 
 export { makeRng, shade, buildPattern };
+
+/* Stable index from a product id, so a product always draws the same
+ * figure between builds. */
+function hashIndex(s) {
+  let n = 0;
+  for (let i = 0; i < s.length; i++) n = (n * 31 + s.charCodeAt(i)) % 9973;
+  return n;
+}
+
+function colourName(product, slug) {
+  const c = product.colours.find((x) => x.slug === slug);
+  return c ? c.name : product.colour.name;
+}
