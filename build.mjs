@@ -279,7 +279,7 @@ const canonicalRoutes = routes.map((r) => (r === 'index.html' ? '/' : `/${r}/`))
 await write(
   'sitemap.xml',
   `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemap.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${canonicalRoutes.map((r) => `  <url><loc>${origin}${BASE}${r}</loc></url>`).join('\n')}
 </urlset>`
 );
@@ -297,6 +297,45 @@ ${origin ? `Sitemap: ${origin}${BASE}/sitemap.xml` : ''}
 /* GitHub Pages serves through Jekyll unless told not to, which would
  * drop files and directories beginning with an underscore. */
 await writeFile(join(DIST, '.nojekyll'), '');
+
+/* --------------------------- 6. Self-checks ------------------------ *
+ * Cheap guards against mistakes that are silent in the source and only
+ * visible in the built output. Each one is here because it actually
+ * happened during this build.
+ * ------------------------------------------------------------------ */
+const checks = [];
+
+for (const route of [...routes, '404.html']) {
+  const file = route.endsWith('.html') ? join(DIST, route) : join(DIST, route, 'index.html');
+  const out = await readFile(file, 'utf8');
+
+  // Nested templates escaped into visible tag soup.
+  const escaped = out.match(/&lt;\/?(?:div|article|section|button|form|ul|ol|table|p|h[1-6])[\s&]/g);
+  if (escaped) checks.push(`${route}: ${escaped.length} escaped HTML tags in the output`);
+
+  // Interpolation of an object that was never rendered.
+  if (out.includes('[object Object]')) checks.push(`${route}: "[object Object]" in the output`);
+
+  // A missing value that reached the page.
+  if (/>\s*(undefined|null|NaN)\s*</.test(out)) checks.push(`${route}: undefined/null/NaN rendered as text`);
+
+  // Every internal link must resolve to a page we actually generated.
+  for (const m of out.matchAll(/href="([^"#?]+)"/g)) {
+    const href = m[1];
+    if (!href.startsWith(BASE + '/') || href.startsWith('//')) continue;
+    const rel = href.slice(BASE.length).replace(/^\/|\/$/g, '');
+    if (!rel) continue;
+    if (/\.(css|js|mjs|svg|woff2|xml|txt|json|html)$/.test(rel)) continue;
+    if (!routes.includes(rel) && !routes.includes(rel + '/')) {
+      checks.push(`${route}: link to "${href}" has no generated page`);
+    }
+  }
+}
+
+if (checks.length) {
+  console.error('\nBuild self-checks failed:\n' + [...new Set(checks)].map((c) => `  - ${c}`).join('\n') + '\n');
+  process.exitCode = 1;
+}
 
 /* ------------------------------ Report ---------------------------- */
 async function dirSize(dir) {

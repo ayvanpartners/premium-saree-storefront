@@ -563,7 +563,7 @@ export function accessibilityPage() {
           <li><strong>Screen-reader feedback</strong> — bag and wishlist changes, filter result counts and validation are announced through polite live regions.</li>
           <li><strong>Reduced motion</strong> — <code>prefers-reduced-motion</code> removes transitions, hover zooms and the loading shimmer.</li>
           <li><strong>Zoom and reflow</strong> — usable at 400% zoom and at 320 CSS pixels wide without two-dimensional scrolling.</li>
-          <li><strong>Works without JavaScript</strong> — you can browse, filter (by form submission), read every product page and reach every policy. The bag and checkout need JavaScript, and say so.</li>
+          <li><strong>Degrades without JavaScript</strong> — every product, collection, guide and policy page renders and reads normally. Controls that cannot work without it are hidden rather than left dead on the page, and replaced with links that do work.</li>
         </ul>
 
         <h2 id="known">Known limitations in this build</h2>
@@ -575,7 +575,7 @@ export function accessibilityPage() {
              <ul class="small mt-2">
                <li>No audit by a third party, and no testing with real assistive-technology users. Automated checks and manual keyboard and screen-reader passes are not a substitute for either.</li>
                <li>Product imagery is generated vector artwork. Alternative text describes what the illustration shows, but illustration cannot convey what a photograph of real drape would.</li>
-               <li>The bag, checkout, wishlist and search filtering require JavaScript. A no-JavaScript route exists for browsing and for filtering by form submission, but not for purchasing.</li>
+               <li>The bag, checkout, wishlist, search and collection filtering require JavaScript. Without it you can still browse every collection and product page, and the collection pages offer the pre-built occasion and fabric collections instead of a filter form that would not work. Purchasing is not possible without JavaScript.</li>
                <li>The interactive first-saree questionnaire requires JavaScript; the equivalent result is reachable with collection filters.</li>
                <li>No captions or transcripts are needed yet because there is no video or audio. If video is added, both become required.</li>
              </ul>`,

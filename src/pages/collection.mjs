@@ -223,6 +223,44 @@ export function collectionPage(key) {
     </div>
 
     <div class="container">
+      <!-- Filtering is done in the browser, so without JavaScript the
+           controls would look functional and do nothing. Rather than
+           leave a dead form on the page, we hide it and offer the
+           collections that exist as real, separately-generated pages. -->
+      <noscript>
+        <style>
+          .filter-rail,
+          .filter-open,
+          .sort-select,
+          label[for='sort'],
+          .load-more {
+            display: none !important;
+          }
+        </style>
+        <div class="mb-6">
+          ${raw(
+            notice(
+              `<p><strong>Filtering and sorting need JavaScript, which is switched off.</strong></p>
+               <p>
+                 Everything in this collection is listed below, and every product page works
+                 normally. These collections are separate pages, so they still narrow things down:
+               </p>
+               <p>
+                 <a href="${url('/collections/wedding-guest/')}">Wedding guest</a> ·
+                 <a href="${url('/collections/bridal/')}">Bridal</a> ·
+                 <a href="${url('/collections/festive/')}">Festive</a> ·
+                 <a href="${url('/collections/party/')}">Party</a> ·
+                 <a href="${url('/collections/everyday/')}">Everyday</a> ·
+                 <a href="${url('/collections/ready-to-wear/')}">Ready to wear</a> ·
+                 <a href="${url('/collections/new-arrivals/')}">New arrivals</a> ·
+                 <a href="${url('/collections/blouses-essentials/')}">Blouses &amp; essentials</a>
+               </p>`,
+              { tone: 'info', iconName: 'filter' }
+            )
+          )}
+        </div>
+      </noscript>
+
       <div class="collection-layout">
         <aside class="filter-rail" aria-labelledby="filters-heading">
           <h2 class="visually-hidden" id="filters-heading">Filter and refine</h2>
