@@ -62,25 +62,43 @@ discount rules, postcode validation and measurement validation are computed by t
 code in both places. A product page, the bag and the checkout cannot disagree with each
 other, because there is only one implementation to disagree with.
 
-### Imagery is generated, not photographed
+### Imagery: illustrations, plus labelled reference photographs
 
-There are no photographs anywhere on this site. Every product image is original vector
-artwork generated from the product record — woven grounds, borders, pallu motifs, and
-stylised drape illustrations with deliberately varied body shapes, heights, ages and skin
-tones.
+No photograph on this site shows the catalogue stock, because the catalogue is fictional.
+Two kinds of image are used, and the interface says which is which everywhere they appear.
 
-That was a deliberate choice, not a shortcut. Licensed photography does not exist for a
-brand that does not exist, and putting stock photographs of real people behind invented
-product claims would misrepresent both. Illustration is honest about being illustration:
-every image is labelled as such in the gallery and in its alternative text.
+**Illustrations.** Every product colourway is original vector artwork generated from the
+product record — woven grounds, borders, pallu motifs, and stylised drape figures with
+deliberately varied body shapes, heights, ages and skin tones. 535 files, 4.2KB average,
+generated per colourway so selecting a colour swaps the whole gallery. These are what
+product cards, the bag and search show.
 
-It is also a real limitation, stated plainly on the accessibility and demonstration
-pages. Photography is how you judge drape, sheen and how a colour sits against skin, and
-vector artwork does not replace it. A real launch needs a photographic shoot with a
-genuinely diverse cast.
+**Reference photographs.** `src/assets/img/reference/` holds 40 openly licensed
+photographs from Wikimedia Commons, described by `sources.json`: one per catalogue record,
+one per occasion tile, three editorial slots. Each is meant to show a *comparable* piece —
+a real Banarasi where the catalogue describes one. A product gallery opens with its
+reference photograph, labelled "Reference photo, not this item", shown whole on a neutral
+ground rather than cropped, and credited in place. Every image, source, creator and
+licence is listed on `/image-credits/`, which the CC BY and BY-SA licences require. Remove
+the folder and every slot falls back to its illustration; `src/lib/reference.mjs` is the
+only code that knows the folder exists.
 
-Every gallery view is generated per colourway (535 files, 4.2KB average), so selecting a
-colour swaps the whole gallery rather than just a label.
+**Only 19 of the 40 are used.** An open licence makes an image legal to use; it does not
+make it the right image. `REJECTED` in `src/lib/reference.mjs` withholds 21 of them with a
+one-line reason each, and those slots fall back to the illustration. Three carry another
+retailer's branding — a seller's "Rs.4000" price, a shop watermark, Pachaiyappa's Silks'
+logo on the homepage hero. Others are simply the wrong thing: a Victorian European
+underskirt for a saree petticoat, an 18th-century French court dress for a satin one, a
+branded supermarket detergent bottle for the delicate wash, a conference panel photograph
+for a ready-to-wear saree. The withheld list and its reasons are published on
+`/image-credits/` rather than left as a silent gap. Editing that one object is how you
+reinstate or reject an image.
+
+Reference photographs are deliberately kept off product cards and out of the bag: those
+surfaces cannot carry the label, and a photograph of somebody else's saree behind an
+invented product is a misrepresentation. Several of the photographs show identifiable
+people, and an open licence covers the photographer's copyright rather than the subject's
+rights — one more reason a real launch needs its own shoot, with model releases.
 
 ### Claims are graded, not asserted
 
@@ -142,7 +160,7 @@ Measured as built output, not a lab score.
 - **No render-blocking JavaScript.** All scripts are modules and deferred by default.
 - **No third-party requests at all.** No analytics, no tag manager, no font CDN, no image CDN. Fonts are self-hosted (SIL OFL) and preloaded.
 - **No layout shift from images.** Every `<img>` has explicit `width`/`height`, and every media box has a reserved `aspect-ratio`.
-- **Images average 4.2KB**, the largest is 13KB, and everything below the fold is `loading="lazy"`.
+- **Illustrations average 4.2KB**, the largest is 13KB. Reference photographs are 14KB to 700KB WebP and lazy-loaded except the product-gallery lead and the homepage hero; everything else below the fold is `loading="lazy"`.
 - Homepage: 79KB HTML, one 79KB stylesheet, two preloaded fonts, one 4KB hero image.
 - The search index is fetched lazily on first use, so pages that never search never pay for it.
 
@@ -179,7 +197,7 @@ is no consent banner.
 
 ## Known limitations
 
-- Vector illustration is not photography, and cannot show real drape, sheen or how a colour sits against skin.
+- Neither the illustrations nor the reference photographs show the actual products. The photographs are of comparable pieces, at whatever resolution Wikimedia Commons had — the homepage hero is only 848px square and looks soft at full width.
 - No third-party accessibility audit and no testing with assistive-technology users. Automated checks and manual keyboard passes are not a substitute.
 - The bag, checkout, wishlist, search and collection filtering need JavaScript. Without it every page still renders and reads; controls that cannot work are hidden rather than left dead, and replaced with links that do.
 - `prefers-reduced-motion` handling is implemented in CSS but was not verified in a browser with the setting enabled.

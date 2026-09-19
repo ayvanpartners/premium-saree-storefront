@@ -1,6 +1,6 @@
 import { html, raw, esc, url, icon } from '../lib/html.mjs';
 import { page } from '../lib/layout.mjs';
-import { productCard, breadcrumb, sectionHead, notice, emptyState, sampleTag } from '../lib/components.mjs';
+import { productCard, breadcrumb, sectionHead, notice, emptyState, sampleTag, occasionImage } from '../lib/components.mjs';
 import { products, collections } from '../data/products.mjs';
 import { fabrics, weaves, occasions, colourFamilies, stockStates } from '../data/taxonomy.mjs';
 
@@ -367,7 +367,7 @@ export function occasionLandingPage() {
         ${occasions.map(
           (o) => raw(`
           <a class="occasion-tile" href="${url(`/collections/${o.id}/`)}">
-            <img src="${url(`/assets/img/occasions/${o.id}.svg`)}" alt="" width="800" height="800" loading="lazy" decoding="async">
+            ${occasionImage(o.id)}
             <span class="occasion-tile__text">
               <strong>${esc(o.label)}</strong>
               <span>${esc(sarees.filter((p) => p.occasions.includes(o.id)).length)} pieces</span>

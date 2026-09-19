@@ -2406,6 +2406,57 @@ mark {
   box-shadow: 0 0 0 1px var(--ink);
 }
 
+/* Reference photographs are shown whole on a neutral ground rather
+ * than cropped to the frame: many are landscape, and cropping a shot
+ * of a saree tends to cut off exactly the border or pallu it was
+ * chosen to show. Illustrations keep the cover crop. */
+.gallery__main--photo {
+  background: var(--sand);
+}
+.gallery__main--photo img {
+  object-fit: contain;
+}
+.gallery__thumb--photo {
+  background: var(--sand);
+}
+.gallery__thumb--photo img {
+  object-fit: contain;
+}
+.gallery__credit {
+  font-size: var(--step--2);
+  color: var(--ink-3);
+  margin-top: var(--sp-1);
+}
+.gallery__credit a {
+  color: inherit;
+  text-underline-offset: 0.15em;
+}
+.gallery__note {
+  font-size: var(--step--2);
+  color: var(--ink-3);
+  margin-top: var(--sp-2);
+  max-width: 60ch;
+}
+@media (min-width: 60em) {
+  .gallery__credit,
+  .gallery__note {
+    grid-column: 2;
+  }
+}
+.hero__credit {
+  position: absolute;
+  right: var(--sp-3);
+  bottom: var(--sp-2);
+  z-index: 2;
+  margin: 0;
+  font-size: var(--step--2);
+  color: #cdc6bd;
+  max-width: none;
+}
+.hero__credit a {
+  color: inherit;
+}
+
 .pdp__eyebrow {
   display: flex;
   flex-wrap: wrap;

@@ -31,6 +31,7 @@ import {
 } from '../data/taxonomy.mjs';
 import { services, fulfilment, returnsPolicy, site, BRAND } from '../data/site.mjs';
 import { formatMoney, estimateDelivery, formatWindow, formatDate } from '../lib/commerce.mjs';
+import { productReference, creditHtml, creditText } from '../lib/reference.mjs';
 
 const cmToIn = (cm) => Math.round((cm / 2.54) * 10) / 10;
 
@@ -62,21 +63,63 @@ function alsoLike(product) {
     .slice(0, 4);
 }
 
+/* What a reference photograph is "of", for its alt text and note. */
+function comparableLabel(product) {
+  const weave = weaveById[product.weave];
+  if (product.type === 'saree') {
+    return weave && weave.id !== 'none' ? `${weave.label} saree` : `${product.fabricLabel.toLowerCase()} saree`;
+  }
+  return product.name.toLowerCase();
+}
+
+/* Everything the gallery and its client script need per view, resolved
+ * once so the thumbnail, main image, caption and zoom dialog agree. */
+function galleryViewData(product, v, col) {
+  if (v.kind === 'photo') {
+    const ref = v.ref;
+    return {
+      ...v,
+      src: ref.src,
+      width: ref.width,
+      height: ref.height,
+      alt: `Reference photograph of a comparable ${comparableLabel(product)} — not the ${product.name} itself. ${creditText(ref)}`,
+      tag: 'Reference photo, not this item',
+      credit: creditHtml(ref),
+      isStatic: true
+    };
+  }
+  return {
+    ...v,
+    src: imgPath(product.id, v.id, col),
+    width: 900,
+    height: 1200,
+    alt: `${product.name}, ${v.label.toLowerCase()}. Illustration.`,
+    tag: 'Illustration, not a photograph',
+    credit: '',
+    isStatic: false
+  };
+}
+
 function gallery(product) {
-  const views = galleryViews(product);
   const col = defaultColour(product);
+  const views = galleryViews(product).map((v) => galleryViewData(product, v, col));
+  const first = views[0];
+  const ref = productReference(product.id);
+
   return html`
     <div class="gallery" data-gallery>
       <div class="gallery__thumbs" role="tablist" aria-label="Product images">
         ${views.map(
           (v, i) => raw(`
-          <button class="gallery__thumb" type="button" role="tab"
+          <button class="gallery__thumb${v.kind === 'photo' ? ' gallery__thumb--photo' : ''}" type="button" role="tab"
                   id="thumb-${v.id}" aria-controls="gallery-main"
                   aria-selected="${i === 0 ? 'true' : 'false'}"
                   aria-current="${i === 0 ? 'true' : 'false'}"
-                  data-view="${v.id}" data-label="${esc(v.label)}"
+                  data-view="${v.id}" data-label="${esc(v.label)}" data-kind="${v.kind}"
+                  data-static="${v.isStatic ? 'true' : 'false'}"
+                  data-alt="${esc(v.alt)}" data-tag="${esc(v.tag)}" data-credit="${esc(v.credit)}"
                   tabindex="${i === 0 ? '0' : '-1'}">
-            <img src="${imgPath(product.id, v.id, col)}" alt="" width="900" height="1200" loading="${
+            <img src="${v.src}" alt="" width="${v.width}" height="${v.height}" loading="${
               i === 0 ? 'eager' : 'lazy'
             }" decoding="async">
             <span class="visually-hidden">${esc(v.label)}</span>
@@ -84,12 +127,12 @@ function gallery(product) {
         )}
       </div>
 
-      <div class="gallery__main" id="gallery-main" role="tabpanel" aria-labelledby="thumb-${views[0].id}">
+      <div class="gallery__main${first.kind === 'photo' ? ' gallery__main--photo' : ''}" id="gallery-main" role="tabpanel" aria-labelledby="thumb-${first.id}">
         <img
-          src="${imgPath(product.id, views[0].id, col)}"
-          alt="${esc(product.name)}, ${esc(views[0].label.toLowerCase())}. Illustration."
-          width="900"
-          height="1200"
+          src="${first.src}"
+          alt="${first.alt}"
+          width="${first.width}"
+          height="${first.height}"
           fetchpriority="high"
           decoding="async"
           data-gallery-image
@@ -101,20 +144,28 @@ function gallery(product) {
       </div>
 
       <p class="gallery__caption">
-        <span data-gallery-caption>${views[0].label}</span>
-        <span>${raw(sampleTag('Illustration, not a photograph'))}</span>
+        <span data-gallery-caption>${first.label}</span>
+        <span data-gallery-tag>${raw(sampleTag(first.tag))}</span>
       </p>
+      <p class="gallery__credit" data-gallery-credit ${raw(first.kind === 'photo' ? '' : 'hidden')}>${raw(first.credit)}</p>
+      ${ref
+        ? html`<p class="gallery__note">
+            The reference photograph is a comparable ${comparableLabel(product)} from Wikimedia Commons,
+            shown so you can see a real example of the weave. It is not the item for sale — the
+            illustrations show this product's own colourways.
+          </p>`
+        : ''}
     </div>
 
     <dialog class="modal--zoom" id="zoom-dialog" aria-label="Enlarged product image">
       <div class="modal__head">
-        <p class="small" data-zoom-caption style="color:inherit">${views[0].label}</p>
+        <p class="small" data-zoom-caption style="color:inherit">${first.label}</p>
         <button class="icon-btn" type="button" data-close-dialog style="color:inherit">
           ${raw(icon('close'))}<span class="visually-hidden">Close</span>
         </button>
       </div>
       <div class="modal__body">
-        <img src="${imgPath(product.id, views[0].id, col)}" alt="" width="900" height="1200" data-zoom-image />
+        <img src="${first.src}" alt="" width="${first.width}" height="${first.height}" data-zoom-image />
       </div>
     </dialog>
   `;
@@ -635,7 +686,13 @@ export function productPage(product) {
     })),
     defaultColour: defaultColour(product),
     image: imgPath(product.id, 'drape', defaultColour(product)),
-    views: views.map((v) => ({ ...v, src: imgPath(product.id, v.id, defaultColour(product)) })),
+    views: views.map((v) => ({
+      id: v.id,
+      label: v.label,
+      kind: v.kind,
+      static: v.kind === 'photo',
+      src: v.kind === 'photo' ? v.ref.src : imgPath(product.id, v.id, defaultColour(product))
+    })),
     imageBase: url('/assets/img/products/'),
     href: url(`/products/${product.id}/`)
   };

@@ -1,6 +1,17 @@
 import { html, raw, esc, url, icon } from '../lib/html.mjs';
 import { page } from '../lib/layout.mjs';
-import { productCard, sectionHead, notice, badge, term, sampleTag } from '../lib/components.mjs';
+import {
+  productCard,
+  sectionHead,
+  notice,
+  badge,
+  term,
+  sampleTag,
+  occasionImage,
+  editorialImage,
+  editorialCaption
+} from '../lib/components.mjs';
+import { editorialReference, creditHtml } from '../lib/reference.mjs';
 import { homepageEdit, firstSareePicks, productById } from '../data/products.mjs';
 import { occasions } from '../data/taxonomy.mjs';
 import { BRAND, site, returnsPolicy } from '../data/site.mjs';
@@ -18,15 +29,20 @@ export function homePage() {
     <!-- 3. Hero: one clear primary action. -->
     <section class="hero">
       <div class="hero__media">
-        <img
-          src="${url('/assets/img/editorial/hero.svg')}"
-          alt=""
-          width="1600"
-          height="1000"
-          fetchpriority="high"
-          decoding="async"
-        />
+        ${raw(
+          editorialImage('home-hero', {
+            fallback: '/assets/img/editorial/hero.svg',
+            width: 1600,
+            height: 1000,
+            eager: true
+          })
+        )}
       </div>
+      ${raw(
+        editorialReference('home-hero')
+          ? `<p class="hero__credit">Reference photograph. ${creditHtml(editorialReference('home-hero'))}</p>`
+          : ''
+      )}
       <div class="container hero__inner">
         <div class="hero__box">
           <p class="eyebrow" style="color:#d7b9bf">Handwoven and contemporary</p>
@@ -60,7 +76,7 @@ export function homePage() {
           ${occasions.map(
             (o) => raw(`
             <a class="occasion-tile" href="${url(`/collections/${o.id}/`)}">
-              <img src="${url(`/assets/img/occasions/${o.id}.svg`)}" alt="" width="800" height="800" loading="lazy" decoding="async">
+              ${occasionImage(o.id)}
               <span class="occasion-tile__text">
                 <strong>${esc(o.label)}</strong>
                 <span>${esc(OCCASION_BLURB[o.id])}</span>
@@ -93,15 +109,21 @@ export function homePage() {
       <div class="container">
         <div class="editorial">
           <figure>
-            <img
-              src="${url('/assets/img/editorial/ready-to-wear.svg')}"
-              alt=""
-              width="1600"
-              height="1200"
-              loading="lazy"
-              decoding="async"
-            />
-            <figcaption>Illustration. The pleats are stitched into a fitted waistband with a concealed side zip.</figcaption>
+            ${raw(
+              editorialImage('ready-to-wear', {
+                fallback: '/assets/img/editorial/ready-to-wear.svg',
+                width: 1600,
+                height: 1200
+              })
+            )}
+            <figcaption>
+              ${raw(
+                editorialCaption('ready-to-wear', {
+                  photo: 'Reference photograph: a cotton saree worn for an ordinary working day in Mysore. Not a ready-to-wear saree — it stands in until the range is photographed.',
+                  illustration: 'Illustration. The pleats are stitched into a fitted waistband with a concealed side zip.'
+                })
+              )}
+            </figcaption>
           </figure>
           <div class="stack-5">
             <div>
@@ -137,15 +159,24 @@ export function homePage() {
       <div class="container">
         <div class="editorial editorial--flip">
           <figure>
-            <img
-              src="${url('/assets/img/editorial/craft.svg')}"
-              alt=""
-              width="1600"
-              height="1200"
-              loading="lazy"
-              decoding="async"
-            />
-            <figcaption style="color:#a8a29a">Illustration of ikat patterning, where the blur is the evidence of hand work.</figcaption>
+            ${raw(
+              editorialImage('weaving-craft', {
+                fallback: '/assets/img/editorial/craft.svg',
+                width: 1600,
+                height: 1200,
+                alt: editorialReference('weaving-craft')
+                  ? 'A weaver at a handloom in Kanchipuram, Tamil Nadu, with silk warp threads stretched across the frame.'
+                  : ''
+              })
+            )}
+            <figcaption style="color:#a8a29a">
+              ${raw(
+                editorialCaption('weaving-craft', {
+                  photo: 'Silk saree weaving on a handloom in Kanchipuram, Tamil Nadu.',
+                  illustration: 'Illustration of ikat patterning, where the blur is the evidence of hand work.'
+                })
+              )}
+            </figcaption>
           </figure>
           <div class="stack-5">
             <div>

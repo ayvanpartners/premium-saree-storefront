@@ -65,9 +65,22 @@ function init(product) {
       if (!thumb) return;
       current = index;
       const img = thumb.querySelector('img');
+      const kind = thumb.dataset.kind || 'illustration';
       main.src = img.src;
-      main.alt = `${product.name}, ${thumb.dataset.label.toLowerCase()}. Illustration.`;
+      main.alt = thumb.dataset.alt || `${product.name}, ${thumb.dataset.label.toLowerCase()}. Illustration.`;
       if (caption) caption.textContent = thumb.dataset.label;
+      // The honesty label, credit line and letterboxing all follow the
+      // view: a reference photograph is shown whole on a neutral ground
+      // and credited; an illustration is cropped to the 3:4 frame.
+      const tag = document.querySelector('[data-gallery-tag] .sample-tag');
+      if (tag) tag.textContent = thumb.dataset.tag || 'Illustration, not a photograph';
+      const credit = document.querySelector('[data-gallery-credit]');
+      if (credit) {
+        credit.hidden = kind !== 'photo';
+        credit.innerHTML = thumb.dataset.credit || '';
+      }
+      const box = document.getElementById('gallery-main');
+      if (box) box.classList.toggle('gallery__main--photo', kind === 'photo');
       thumbs.forEach((t, i) => {
         t.setAttribute('aria-selected', String(i === index));
         t.setAttribute('aria-current', String(i === index));
@@ -116,6 +129,8 @@ function init(product) {
       if (!e.target.matches('input[name="colour"]')) return;
       const slug = e.target.value;
       for (const thumb of thumbs) {
+        // A reference photograph is one fixed image, not a colourway.
+        if (thumb.dataset.static === 'true') continue;
         const img = thumb.querySelector('img');
         img.src = `${product.imageBase}${product.id}__${slug}__${thumb.dataset.view}.svg`;
       }

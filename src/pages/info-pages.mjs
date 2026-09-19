@@ -4,6 +4,7 @@ import { breadcrumb, notice, sampleTag, accordion, sectionHead } from '../lib/co
 import { site, fulfilment, returnsPolicy, services, paymentMethods, BRAND } from '../data/site.mjs';
 import { formatMoney, UK_BANK_HOLIDAYS } from '../lib/commerce.mjs';
 import { products } from '../data/products.mjs';
+import { allReferences, rejectedReferences, referenceAvailable } from '../lib/reference.mjs';
 
 function infoShell({ title, slug, description, lede, body, toc: tocItems = null, draft = false }) {
   return page({
@@ -574,7 +575,7 @@ export function accessibilityPage() {
              </p>
              <ul class="small mt-2">
                <li>No audit by a third party, and no testing with real assistive-technology users. Automated checks and manual keyboard and screen-reader passes are not a substitute for either.</li>
-               <li>Product imagery is generated vector artwork. Alternative text describes what the illustration shows, but illustration cannot convey what a photograph of real drape would.</li>
+               <li>Product colourways are generated vector artwork, and the photograph that opens each product gallery is a reference image of a comparable piece rather than the item for sale. Alternative text says which is which, but neither can convey what a photograph of the real product would.</li>
                <li>The bag, checkout, wishlist, search and collection filtering require JavaScript. Without it you can still browse every collection and product page, and the collection pages offer the pre-built occasion and fabric collections instead of a filter form that would not work. Purchasing is not possible without JavaScript.</li>
                <li>The interactive first-saree questionnaire requires JavaScript; the equivalent result is reachable with collection filters.</li>
                <li>No captions or transcripts are needed yet because there is no video or audio. If video is added, both become required.</li>
@@ -643,21 +644,33 @@ export function demoNoticePage() {
 
         <h2 id="imagery">About the imagery</h2>
         <p>
-          <strong>There are no photographs on this site.</strong> Every product image is original
-          vector artwork generated from the product record — woven grounds, borders, pallu motifs, and
-          stylised drape illustrations with deliberately varied body shapes, heights and skin tones.
+          <strong>Two kinds of image appear on this site, and neither is a photograph of the
+          catalogue stock.</strong>
         </p>
+        <ul>
+          <li>
+            <strong>Illustrations.</strong> Every product colourway is original vector artwork
+            generated from the product record — woven grounds, borders, pallu motifs, and stylised
+            drape figures with deliberately varied body shapes, heights, ages and skin tones. These
+            are labelled "Illustration, not a photograph" wherever they appear.
+          </li>
+          <li>
+            <strong>Reference photographs.</strong> Each product page opens with one openly licensed
+            photograph from Wikimedia Commons showing a <em>comparable</em> weave, fabric or garment
+            — a real Banarasi where the catalogue describes a Banarasi. The same library supplies
+            the occasion tiles and editorial slots. Every one is labelled "Reference photo, not this
+            item", credited in place, and listed with its source and licence on the
+            <a href="${url('/image-credits/')}">image credits</a> page.
+          </li>
+        </ul>
         <p>
-          That was a deliberate choice. Licensed photography does not exist for a brand that does not
-          exist, and placing stock photographs of real people behind invented product claims would
-          misrepresent both the people and the products. Illustration is honest about being
-          illustration, and every image is labelled as such in the gallery and in its alternative
-          text.
-        </p>
-        <p>
-          It is also a real limitation. Photography is how you judge drape, sheen and how a colour
-          sits against skin, and no amount of vector artwork replaces it. A real launch needs a
-          photographic shoot with a genuinely diverse cast.
+          Placing a photograph of somebody else's saree behind an invented product would be a
+          misrepresentation, so the reference photographs are never used on product cards, in the
+          bag, or anywhere the label cannot sit next to the image. Several show identifiable people
+          — an open licence covers the photographer's copyright, not the subject's rights — which is
+          one more reason a real launch needs its own photography: front and back drape, pallu,
+          border, blouse piece, reverse and weave close-up of the actual item for sale, with a
+          genuinely diverse cast and signed model releases.
         </p>
 
         <h2 id="integrations">Integrations not connected</h2>
@@ -692,7 +705,7 @@ export function demoNoticePage() {
         <ul>
           <li>Static HTML generated by a small Node script. No framework, no runtime dependencies, no build toolchain beyond Node itself.</li>
           <li>One stylesheet, a handful of ES modules, self-hosted variable fonts under the SIL Open Font License.</li>
-          <li>All imagery is SVG generated at build time, typically 2 to 14KB each.</li>
+          <li>Product illustrations are SVG generated at build time, typically 2 to 14KB each. The 40 reference photographs are WebP, 14KB to 700KB, lazy-loaded below the fold.</li>
           <li>Delivery dates, totals and validation come from one shared module used by both the build and the browser, so pages cannot disagree with each other.</li>
         </ul>
       </div>
@@ -971,5 +984,145 @@ export function cookiesPage() {
     lede: 'No cookies are set by this site. Here is what is actually stored, and where.',
     body,
     draft: true
+  });
+}
+
+
+/* ---------------------------- Image credits ----------------------- */
+export function imageCreditsPage() {
+  const refs = allReferences();
+  const withheld = rejectedReferences();
+  const byKind = (kind) => refs.filter((r) => r.kind === kind);
+  const usedFor = (r) =>
+    r.kind === 'products'
+      ? `Product page: ${esc(r.intendedUse.replace(/ visual reference$/i, ''))}`
+      : r.kind === 'occasions'
+        ? `Occasion tile: ${esc(r.key.replace(/-/g, ' '))}`
+        : `Editorial: ${esc(r.key.replace(/-/g, ' '))}`;
+
+  const table = (rows) => `
+    <div class="table-scroll">
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Image</th>
+            <th scope="col">Used for</th>
+            <th scope="col">Source</th>
+            <th scope="col">Photographer or contributor</th>
+            <th scope="col">Licence</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows
+            .map(
+              (r) => `<tr>
+            <td><img src="${r.src}" alt="" width="${r.width}" height="${r.height}" loading="lazy" decoding="async" style="width:4rem;height:5.33rem;object-fit:contain;background:var(--sand)"></td>
+            <td>${usedFor(r)}</td>
+            <td><a class="link" href="${esc(r.sourcePage)}" rel="noopener">${esc(r.title)}</a><br><span class="xs muted">Wikimedia Commons</span></td>
+            <td>${esc(r.creator)}</td>
+            <td><a class="link" href="${esc(r.licenceUrl)}" rel="license noopener">${esc(r.licence)}</a></td>
+          </tr>`
+            )
+            .join('')}
+        </tbody>
+      </table>
+    </div>`;
+
+  const body = refs.length
+    ? html`
+        <section class="section">
+          <div class="container container--narrow prose">
+            <h2 id="what">What these images are</h2>
+            <p>
+              Every photograph on this site comes from Wikimedia Commons under an open licence and
+              shows a <strong>comparable</strong> saree, garment or accessory — not the catalogue
+              stock, which does not exist. They are here so a reader can see a real Banarasi next to
+              the description of one. Each is labelled as a reference photograph where it appears,
+              and this page is the full attribution required by the licences.
+            </p>
+            <p>
+              A Creative Commons licence covers the photographer's copyright. It does not cover the
+              rights of any identifiable person in the picture, and it does not imply that anybody
+              shown endorses this site. Before a real launch these should be replaced with
+              photography of the actual products, with signed model releases.
+            </p>
+            ${raw(
+              notice(
+                `<p><strong>${refs.length} images.</strong> The machine-readable manifest is
+                 <a href="${url('/assets/img/reference/sources.json')}">sources.json</a> and the
+                 same table in Markdown is
+                 <a href="${url('/assets/img/reference/ATTRIBUTION.md')}">ATTRIBUTION.md</a>. Keep
+                 both with any copy of the images.</p>`,
+                { tone: 'info', iconName: 'info' }
+              )
+            )}
+          </div>
+        </section>
+
+        <section class="section section--tight">
+          <div class="container">
+            <h2 class="h3 mb-4" id="products">Product pages</h2>
+            ${raw(table(byKind('products')))}
+            <h2 class="h3 mb-4 mt-7" id="occasions">Occasion tiles</h2>
+            ${raw(table(byKind('occasions')))}
+            <h2 class="h3 mb-4 mt-7" id="editorial">Editorial slots</h2>
+            ${raw(table(byKind('editorial')))}
+          </div>
+        </section>
+
+        ${withheld.length
+          ? html`
+              <section class="section section--sand">
+                <div class="container container--narrow prose">
+                  <h2 id="withheld">Images we downloaded and did not use</h2>
+                  <p>
+                    ${withheld.length} of the ${withheld.length + refs.length} images in the library
+                    are withheld. An open licence makes an image legal to use; it does not make it
+                    the right image. Those slots fall back to the generated illustration, and the
+                    reason is recorded here rather than left as a silent gap.
+                  </p>
+                  <dl class="spec-list">
+                    ${raw(
+                      withheld
+                        .map(
+                          (r) =>
+                            `<div><dt>${esc(r.key.replace(/-/g, ' '))}</dt><dd>${esc(r.rejected)}<em>${esc(r.file)}</em></dd></div>`
+                        )
+                        .join('')
+                    )}
+                  </dl>
+                </div>
+              </section>
+            `
+          : ''}
+      `
+    : html`
+        <section class="section">
+          <div class="container container--narrow prose">
+            <p>
+              This build contains no photographs. Every image is original vector artwork generated
+              at build time, and needs no attribution.
+            </p>
+          </div>
+        </section>
+      `;
+
+  return infoShell({
+    title: 'Image credits',
+    slug: 'image-credits',
+    description: 'Source, photographer and licence for every reference photograph used on this site.',
+    lede: refs.length
+      ? 'Source, photographer and licence for every photograph on the site. None of them shows the catalogue stock.'
+      : 'This build uses no photographs.',
+    body,
+    toc: refs.length
+      ? [
+          { id: 'what', label: 'What these images are' },
+          { id: 'products', label: 'Product pages' },
+          { id: 'occasions', label: 'Occasion tiles' },
+          { id: 'editorial', label: 'Editorial slots' },
+          ...(rejectedReferences().length ? [{ id: 'withheld', label: 'Downloaded but not used' }] : [])
+        ]
+      : null
   });
 }

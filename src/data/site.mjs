@@ -303,6 +303,7 @@ export const footer = [
       { label: 'About ' + BRAND, href: '/about/' },
       { label: 'How we describe our sarees', href: '/about/#sourcing-language' },
       { label: 'Accessibility', href: '/accessibility/' },
+      { label: 'Image credits', href: '/image-credits/' },
       { label: 'Demonstration notice', href: '/demo-notice/' }
     ]
   },

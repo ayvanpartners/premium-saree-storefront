@@ -10,6 +10,7 @@
  * ------------------------------------------------------------------ */
 
 import { mkdir, rm, writeFile, readFile, cp, readdir, stat } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { join, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { performance } from 'node:perf_hooks';
@@ -75,6 +76,13 @@ await cp(join(SRC, 'assets', 'js'), join(DIST, 'assets', 'js'), { recursive: tru
  * delivery dates and totals are computed by identical code. */
 await cp(join(SRC, 'lib', 'commerce.mjs'), join(DIST, 'assets', 'js', 'commerce.mjs'));
 
+/* Photographic reference library, when present: the WebP files plus
+ * the attribution and manifest files, which must travel with them. */
+const REFERENCE = join(SRC, 'assets', 'img', 'reference');
+if (existsSync(REFERENCE)) {
+  await cp(REFERENCE, join(DIST, 'assets', 'img', 'reference'), { recursive: true });
+}
+
 /* ----------------------------- 2. Imagery ------------------------- */
 function viewSvg(product, view, colour) {
   switch (view) {
@@ -103,6 +111,8 @@ for (const product of products) {
   // gallery needs every view, because switching colour swaps the lot.
   for (const colour of product.colours) {
     for (const view of views) {
+      // Reference photographs are copied, not generated.
+      if (view.kind === 'photo') continue;
       await writeImage(`products/${product.id}__${colour.slug}__${view.id}.svg`, viewSvg(product, view.id, colour.slug));
     }
     // Cards hover-swap to `front`, which some types do not list.
@@ -270,6 +280,7 @@ await page('demo-notice', info.demoNoticePage());
 await page('terms', info.termsPage());
 await page('privacy', info.privacyPage());
 await page('cookies', info.cookiesPage());
+await page('image-credits', info.imageCreditsPage());
 
 await write('404.html', shop.notFoundPage());
 
@@ -326,7 +337,7 @@ for (const route of [...routes, '404.html']) {
     if (!href.startsWith(BASE + '/') || href.startsWith('//')) continue;
     const rel = href.slice(BASE.length).replace(/^\/|\/$/g, '');
     if (!rel) continue;
-    if (/\.(css|js|mjs|svg|woff2|xml|txt|json|html)$/.test(rel)) continue;
+    if (/\.(css|js|mjs|svg|webp|woff2|xml|txt|json|md|html)$/.test(rel)) continue;
     if (!routes.includes(rel) && !routes.includes(rel + '/')) {
       checks.push(`${route}: link to "${href}" has no generated page`);
     }

@@ -24,6 +24,12 @@ const TYPES = {
   '.js': 'text/javascript; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
   '.svg': 'image/svg+xml',
+  '.webp': 'image/webp',
+  '.avif': 'image/avif',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.md': 'text/markdown; charset=utf-8',
   '.woff2': 'font/woff2',
   '.xml': 'application/xml; charset=utf-8',
   '.txt': 'text/plain; charset=utf-8',
@@ -59,7 +65,7 @@ function send(res, status, file, body, req) {
   // Real hosting fingerprints filenames and caches hard. This build
   // does not, so anything editable is served no-cache — otherwise a
   // rebuild appears to change nothing until you clear the cache.
-  const longLived = ext === '.woff2' || ext === '.svg';
+  const longLived = ['.woff2', '.svg', '.webp', '.avif', '.jpg', '.jpeg', '.png'].includes(ext);
   const headers = {
     'content-type': TYPES[ext] || 'application/octet-stream',
     'cache-control': longLived ? 'public, max-age=3600' : 'no-cache',

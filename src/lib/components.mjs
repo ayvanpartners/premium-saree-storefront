@@ -5,6 +5,7 @@
 import { html, raw, esc, url, icon, attrs, cls } from './html.mjs';
 import { formatMoney } from './commerce.mjs';
 import { fabricById, weaveById, occasionById, stockStates, drapeDifficulty } from '../data/taxonomy.mjs';
+import { productReference, occasionReference, editorialReference, creditHtml } from './reference.mjs';
 
 /* ------------------------------ Images ---------------------------- */
 export function imgPath(productId, view, colourSlug) {
@@ -18,34 +19,70 @@ export function defaultColour(product) {
   return (first || product.colours[0]).slug;
 }
 
-/** Views we generate, in gallery order. `blouse` is skipped when there
- * is no blouse piece to show — a gallery slot promising something not
- * in the parcel is exactly the confusion we are trying to remove. */
+/** Views in gallery order. `blouse` is skipped when there is no blouse
+ * piece to show — a gallery slot promising something not in the parcel
+ * is exactly the confusion we are trying to remove.
+ *
+ * When the reference library has a photograph for the product it
+ * leads the gallery, marked `kind: 'photo'`. It is a comparable piece,
+ * not the item for sale, and the product page labels it as such. */
 export function galleryViews(product) {
-  const views = [
-    { id: 'drape', label: 'Full-length drape' },
-    { id: 'front', label: 'Laid flat, front' },
-    { id: 'pallu', label: 'Pallu detail' },
-    { id: 'border', label: 'Border detail' },
-    { id: 'macro', label: 'Fabric close-up' },
-    { id: 'back', label: 'Reverse face' }
-  ];
-  if (product.type === 'saree' && product.blousePiece.included) {
-    views.push({ id: 'blouse', label: 'The included blouse piece' });
-  } else if (product.type === 'blouse') {
-    return [
-      { id: 'blouse', label: 'The blouse, flat' },
-      { id: 'front', label: 'Fabric, full width' },
-      { id: 'macro', label: 'Fabric close-up' },
-      { id: 'border', label: 'Finish detail' }
+  const ref = productReference(product.id);
+  const lead = ref ? [{ id: 'reference', label: 'Reference photograph', kind: 'photo', ref }] : [];
+  const illustration = (id, label) => ({ id, label, kind: 'illustration' });
+
+  let views;
+  if (product.type === 'blouse') {
+    views = [
+      illustration('blouse', 'The blouse, flat'),
+      illustration('front', 'Fabric, full width'),
+      illustration('macro', 'Fabric close-up'),
+      illustration('border', 'Finish detail')
     ];
   } else if (product.type !== 'saree') {
-    return [
-      { id: 'front', label: 'Product' },
-      { id: 'macro', label: 'Material close-up' }
+    views = [illustration('front', 'Product'), illustration('macro', 'Material close-up')];
+  } else {
+    views = [
+      illustration('drape', 'Full-length drape'),
+      illustration('front', 'Laid flat, front'),
+      illustration('pallu', 'Pallu detail'),
+      illustration('border', 'Border detail'),
+      illustration('macro', 'Fabric close-up'),
+      illustration('back', 'Reverse face')
     ];
+    if (product.blousePiece.included) views.push(illustration('blouse', 'The included blouse piece'));
   }
-  return views;
+  return [...lead, ...views];
+}
+
+/* ------------------- Reference photographs in slots --------------- */
+
+/** Occasion tile image: the reference photograph when one exists,
+ * otherwise the generated tile. Decorative — the tile carries its own
+ * text label — so alt is empty; credit lives on /image-credits/. */
+export function occasionImage(occasionId) {
+  const ref = occasionReference(occasionId);
+  if (ref) {
+    return `<img src="${ref.src}" alt="" width="${ref.width}" height="${ref.height}" loading="lazy" decoding="async">`;
+  }
+  return `<img src="${url(`/assets/img/occasions/${occasionId}.svg`)}" alt="" width="800" height="800" loading="lazy" decoding="async">`;
+}
+
+/** Editorial slot image with a generated fallback. */
+export function editorialImage(slot, { fallback, width, height, alt = '', eager = false }) {
+  const ref = editorialReference(slot);
+  const src = ref ? ref.src : url(fallback);
+  const w = ref ? ref.width : width;
+  const h = ref ? ref.height : height;
+  const loading = eager ? 'fetchpriority="high"' : 'loading="lazy"';
+  return `<img src="${src}" alt="${esc(alt)}" width="${w}" height="${h}" ${loading} decoding="async">`;
+}
+
+/** Caption for an editorial slot: the photo's own description and
+ * credit when a reference is used, otherwise the illustration text. */
+export function editorialCaption(slot, { photo, illustration }) {
+  const ref = editorialReference(slot);
+  return ref ? `${esc(photo)} ${creditHtml(ref)}` : esc(illustration);
 }
 
 /* ------------------------------ Labels ---------------------------- */
