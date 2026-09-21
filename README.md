@@ -100,6 +100,27 @@ invented product is a misrepresentation. Several of the photographs show identif
 people, and an open licence covers the photographer's copyright rather than the subject's
 rights — one more reason a real launch needs its own shoot, with model releases.
 
+### The supplier photo library is not in this repo
+
+`src/assets/images/` holds roughly 2,700 JPEGs — about 2.7GB — of a supplier's own
+catalogue, downloaded from their shared Google Photos albums and filed by price point
+(₹1,500 to ₹35,000, 1,472 saree folders, paired `01-folded` / `02-open` views). It is in
+`.gitignore` and is expected to exist only on a local machine.
+
+It is excluded for two independent reasons, either of which is sufficient:
+
+- **Size.** Git keeps every binary forever, a GitHub push caps out around 2GB, and a
+  published Pages site caps at 1GB. One commit of this folder would break the deploy and
+  could not be cleanly undone.
+- **Rights.** They are a third party's photographs of their own stock, obtained from
+  albums shared for buying purposes. Republishing them from a public repo is the
+  supplier's call, not ours.
+
+Before any of it reaches the site it needs written permission from the supplier, and a
+build step that emits web-sized derivatives instead of 1MB originals. The catalogue IDs in
+`src/data/products.mjs` do not map to these folders either — that mapping does not exist
+yet.
+
 ### Claims are graded, not asserted
 
 "Handloom" adds most of the price of a saree and cannot be verified from a photograph, so
