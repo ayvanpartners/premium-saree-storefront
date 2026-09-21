@@ -3,3 +3,21 @@ dist/
 .DS_Store
 *.log
 .cache/
+
+# Supplier photo library — deliberately never committed.
+#
+# src/assets/images/ holds ~2,700 JPEGs (about 2.7GB) of a supplier's
+# own catalogue, downloaded from their shared Google Photos albums and
+# filed by price point. It stays out of git for two reasons:
+#
+#   Size.   Git keeps every binary forever, GitHub pushes cap out
+#           around 2GB, and a published Pages site caps at 1GB. One
+#           commit of this folder would break the deploy permanently.
+#   Rights. They are a third party's photographs of their own stock.
+#           Republishing them from a public repo is theirs to permit,
+#           not ours to assume.
+#
+# Keep the originals locally. Before any of it reaches the site it
+# needs: written permission from the supplier, and a build step that
+# emits web-sized derivatives rather than 1MB originals.
+src/assets/images/
