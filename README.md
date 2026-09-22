@@ -1,8 +1,8 @@
 # [BRAND NAME] — premium saree storefront
 
-A complete, static ecommerce storefront for a premium Indian saree brand selling to the
-United Kingdom. 71 pages, no runtime dependencies, no framework, no build toolchain
-beyond Node itself.
+A complete, static ecommerce storefront for a premium Indian saree brand. The current
+build contains 1,501 pages, no runtime dependencies, no framework, and no build toolchain
+beyond Node itself. Prices are currently stored and displayed as whole Indian rupees.
 
 **This is a demonstration. [BRAND NAME] does not exist, nothing can be bought, no payment
 can be taken and no order is created.** Everything invented is listed on the
@@ -31,7 +31,7 @@ BASE_PATH=/repo-name SITE_ORIGIN=https://example.github.io node build.mjs
 
 | Area | Pages |
 | --- | --- |
-| Shopping | Home, 11 collections, 32 product pages, search, wishlist, bag |
+| Shopping | Home, 11 collections, 1,461 product pages, search, wishlist, bag |
 | Checkout | Checkout, order confirmation, order tracking, account |
 | Guide | Hub plus 10 guides: first saree, anatomy, draping, fabrics, weaves, ready to wear, tailoring, measurements, care, glossary |
 | Service and legal | Delivery, returns, contact, about, accessibility, demonstration notice, terms, privacy, cookies, 404 |
@@ -44,7 +44,7 @@ payment failure, stock change during checkout, expired session, and success.
 ## How it is built
 
 ```
-build.mjs            generates dist/ — pages, 535 SVGs, catalogue index, sitemap, robots
+build.mjs            generates dist/ — pages, catalogue assets/index, sitemap, robots
 serve.mjs            static server for local review (gzip, real 404s)
 src/data/            catalogue, taxonomy, site configuration
 src/lib/             html helpers, layout, components, imagery, commerce
@@ -62,64 +62,28 @@ discount rules, postcode validation and measurement validation are computed by t
 code in both places. A product page, the bag and the checkout cannot disagree with each
 other, because there is only one implementation to disagree with.
 
-### Imagery: illustrations, plus labelled reference photographs
+### Imagery: actual inventory photos
 
-No photograph on this site shows the catalogue stock, because the catalogue is fictional.
-Two kinds of image are used, and the interface says which is which everywhere they appear.
+The 1,453 saree inventory records use the supplier photographs filed under
+`src/assets/images/`. Product cards, galleries, search, wishlist, homepage editorial panels,
+and occasion tiles use web-sized derivatives generated in `src/assets/catalog/`. The retired
+Wikimedia reference-photo library has been removed. The eight remaining sample essentials use
+generated illustrations.
 
-**Illustrations.** Every product colourway is original vector artwork generated from the
-product record — woven grounds, borders, pallu motifs, and stylised drape figures with
-deliberately varied body shapes, heights, ages and skin tones. 535 files, 4.2KB average,
-generated per colourway so selecting a colour swaps the whole gallery. These are what
-product cards, the bag and search show.
+### Supplier photo inventory
 
-**Reference photographs.** `src/assets/img/reference/` holds 40 openly licensed
-photographs from Wikimedia Commons, described by `sources.json`: one per catalogue record,
-one per occasion tile, three editorial slots. Each is meant to show a *comparable* piece —
-a real Banarasi where the catalogue describes one. A product gallery opens with its
-reference photograph, labelled "Reference photo, not this item", shown whole on a neutral
-ground rather than cropped, and credited in place. Every image, source, creator and
-licence is listed on `/image-credits/`, which the CC BY and BY-SA licences require. Remove
-the folder and every slot falls back to its illustration; `src/lib/reference.mjs` is the
-only code that knows the folder exists.
+`src/assets/images/` contains the 2,668 original JPEGs, organized into 1,453 inventory
+folders. Both that directory and the generated `src/assets/catalog/` derivatives remain in
+`.gitignore`; the originals are about 2.7GB and the web derivatives about 506MB.
 
-**Only 19 of the 40 are used.** An open licence makes an image legal to use; it does not
-make it the right image. `REJECTED` in `src/lib/reference.mjs` withholds 21 of them with a
-one-line reason each, and those slots fall back to the illustration. Three carry another
-retailer's branding — a seller's "Rs.4000" price, a shop watermark, Pachaiyappa's Silks'
-logo on the homepage hero. Others are simply the wrong thing: a Victorian European
-underskirt for a saree petticoat, an 18th-century French court dress for a satin one, a
-branded supermarket detergent bottle for the delicate wash, a conference panel photograph
-for a ready-to-wear saree. The withheld list and its reasons are published on
-`/image-credits/` rather than left as a silent gap. Editing that one object is how you
-reinstate or reject an image.
+Run `python tools/sync-inventory.py` after changing `saree-inventory.csv` or the source
+photos. It regenerates `src/data/inventory-records.mjs` and creates incremental 900×1200
+WebP derivatives. `node build.mjs` then copies those derivatives into `dist/assets/catalog/`.
 
-Reference photographs are deliberately kept off product cards and out of the bag: those
-surfaces cannot carry the label, and a photograph of somebody else's saree behind an
-invented product is a misrepresentation. Several of the photographs show identifiable
-people, and an open licence covers the photographer's copyright rather than the subject's
-rights — one more reason a real launch needs its own shoot, with model releases.
-
-### The supplier photo library is not in this repo
-
-`src/assets/images/` holds roughly 2,700 JPEGs — about 2.7GB — of a supplier's own
-catalogue, downloaded from their shared Google Photos albums and filed by price point
-(₹1,500 to ₹35,000, 1,472 saree folders, paired `01-folded` / `02-open` views). It is in
-`.gitignore` and is expected to exist only on a local machine.
-
-It is excluded for two independent reasons, either of which is sufficient:
-
-- **Size.** Git keeps every binary forever, a GitHub push caps out around 2GB, and a
-  published Pages site caps at 1GB. One commit of this folder would break the deploy and
-  could not be cleanly undone.
-- **Rights.** They are a third party's photographs of their own stock, obtained from
-  albums shared for buying purposes. Republishing them from a public repo is the
-  supplier's call, not ours.
-
-Before any of it reaches the site it needs written permission from the supplier, and a
-build step that emits web-sized derivatives instead of 1MB originals. The catalogue IDs in
-`src/data/products.mjs` do not map to these folders either — that mapping does not exist
-yet.
+Every live saree uses its `SS-####` inventory number as the stable product ID. Folder and
+product names include the visually identified color, motif/pattern, and border. The original
+photo library and derivatives should only be distributed where the supplier's permission
+allows it.
 
 ### Claims are graded, not asserted
 
@@ -143,8 +107,8 @@ Driven through a real browser against the built output, not asserted from the so
 
 1. **First-time buyer** — found an easy-to-wear saree, read what was included, added to bag, completed guest checkout, reached confirmation. Bag cleared, order stored, nothing charged.
 2. **Wedding guest to a deadline** — filtered by occasion, colour and budget (14 → 4 → 2 results, counts and URL correct), checked delivery windows per shipping option.
-3. **Experienced shopper** — `banarsi` → Banarasi (typo), `kanchipuram` → Kanjivaram (regional spelling), `sari` → saree (synonym), `under £100` → price filter, `light silk` → Chanderi and Kota Doria.
-4. **Tailoring with a mistake** — added blouse stitching (£425 → £460, delivery moved 2 Oct → 13 Oct with the reason shown), entered `36` in centimetres, got a unit-mismatch error naming the likely cause, corrected it and added to bag.
+3. **Experienced shopper** — `banarsi` → Banarasi (typo), `kanchipuram` → Kanjivaram (regional spelling), `sari` → saree (synonym), `under ₹5,000` → price filter, `light silk` → Chanderi and Kota Doria.
+4. **Tailoring with a mistake** — added blouse stitching (₹42,500 → ₹46,000, delivery moved 2 Oct → 13 Oct with the reason shown), entered `36` in centimetres, got a unit-mismatch error naming the likely cause, corrected it and added to bag.
 5. **Keyboard** — focus moves into drawers, other panels go `inert`, Shift+Tab wraps, Escape closes and returns focus to the trigger, scroll lock releases.
 6. **Recovery** — no search results (suggestions plus a correction), out-of-stock product and colour, declined payment (bag intact, no order created, three routes forward), stock running out mid-checkout, expired session, unknown postcode falling through to manual entry, invalid and below-minimum discount codes.
 
@@ -196,7 +160,7 @@ assets) is in place.
 Everything below is invented for this demonstration and describes nothing real. The
 interface marks it wherever it could be mistaken for a business fact.
 
-- All 32 products: names, descriptions, prices, compositions, measurements, stock, provenance
+- The eight non-saree essentials and all unverified operational details remain sample content. Inventory saree photos, IDs, prices, and visual descriptions come from the local catalogue; fibre, measurements, and provenance remain explicitly unconfirmed.
 - Business identity: the Leicester studio address, email, phone number, VAT number
 - Fulfilment: handling times, carriers, transit times, delivery prices, bank-holiday list
 - Policies: delivery, returns, terms, privacy and cookies are drafts marked for legal review
@@ -218,7 +182,7 @@ is no consent banner.
 
 ## Known limitations
 
-- Neither the illustrations nor the reference photographs show the actual products. The photographs are of comparable pieces, at whatever resolution Wikimedia Commons had — the homepage hero is only 848px square and looks soft at full width.
+- Inventory photos show the actual SS-numbered sarees, but fibre, weave, measurements and provenance still require supplier confirmation.
 - No third-party accessibility audit and no testing with assistive-technology users. Automated checks and manual keyboard passes are not a substitute.
 - The bag, checkout, wishlist, search and collection filtering need JavaScript. Without it every page still renders and reads; controls that cannot work are hidden rather than left dead, and replaced with links that do.
 - `prefers-reduced-motion` handling is implemented in CSS but was not verified in a browser with the setting enabled.

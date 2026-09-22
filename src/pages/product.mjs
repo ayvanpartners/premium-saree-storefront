@@ -31,7 +31,6 @@ import {
 } from '../data/taxonomy.mjs';
 import { services, fulfilment, returnsPolicy, site, BRAND } from '../data/site.mjs';
 import { formatMoney, estimateDelivery, formatWindow, formatDate } from '../lib/commerce.mjs';
-import { productReference, creditHtml, creditText } from '../lib/reference.mjs';
 
 const cmToIn = (cm) => Math.round((cm / 2.54) * 10) / 10;
 
@@ -63,28 +62,15 @@ function alsoLike(product) {
     .slice(0, 4);
 }
 
-/* What a reference photograph is "of", for its alt text and note. */
-function comparableLabel(product) {
-  const weave = weaveById[product.weave];
-  if (product.type === 'saree') {
-    return weave && weave.id !== 'none' ? `${weave.label} saree` : `${product.fabricLabel.toLowerCase()} saree`;
-  }
-  return product.name.toLowerCase();
-}
-
 /* Everything the gallery and its client script need per view, resolved
  * once so the thumbnail, main image, caption and zoom dialog agree. */
 function galleryViewData(product, v, col) {
-  if (v.kind === 'photo') {
-    const ref = v.ref;
+  if (v.kind === 'actual') {
     return {
       ...v,
-      src: ref.src,
-      width: ref.width,
-      height: ref.height,
-      alt: `Reference photograph of a comparable ${comparableLabel(product)} — not the ${product.name} itself. ${creditText(ref)}`,
-      tag: 'Reference photo, not this item',
-      credit: creditHtml(ref),
+      alt: `${product.name}, ${v.label.toLowerCase()}. Actual product photograph.`,
+      tag: 'Actual product photo',
+      credit: '',
       isStatic: true
     };
   }
@@ -104,7 +90,6 @@ function gallery(product) {
   const col = defaultColour(product);
   const views = galleryViews(product).map((v) => galleryViewData(product, v, col));
   const first = views[0];
-  const ref = productReference(product.id);
 
   return html`
     <div class="gallery" data-gallery>
@@ -148,13 +133,6 @@ function gallery(product) {
         <span data-gallery-tag>${raw(sampleTag(first.tag))}</span>
       </p>
       <p class="gallery__credit" data-gallery-credit ${raw(first.kind === 'photo' ? '' : 'hidden')}>${raw(first.credit)}</p>
-      ${ref
-        ? html`<p class="gallery__note">
-            The reference photograph is a comparable ${comparableLabel(product)} from Wikimedia Commons,
-            shown so you can see a real example of the weave. It is not the item for sale — the
-            illustrations show this product's own colourways.
-          </p>`
-        : ''}
     </div>
 
     <dialog class="modal--zoom" id="zoom-dialog" aria-label="Enlarged product image">
@@ -589,7 +567,7 @@ function detailAccordion(product) {
         : product.petticoat.required
           ? '<strong>Required, not included</strong>'
           : 'Not needed with this piece',
-      note: product.petticoat.required && !product.petticoat.included ? 'We sell cotton and satin petticoats from £22.' : null
+      note: product.petticoat.required && !product.petticoat.included ? 'We sell cotton and satin petticoats from ₹2,200.' : null
     },
     product.attributes.sheerness ? { label: 'Sheerness', value: esc(product.attributes.sheerness) } : null,
     product.attributes.texture ? { label: 'Texture', value: esc(product.attributes.texture) } : null,
@@ -685,13 +663,13 @@ export function productPage(product) {
       requiresMeasurements: services[id].requiresMeasurements
     })),
     defaultColour: defaultColour(product),
-    image: imgPath(product.id, 'drape', defaultColour(product)),
+    image: product.images?.[0] ? url(product.images[0].src) : imgPath(product.id, 'drape', defaultColour(product)),
     views: views.map((v) => ({
       id: v.id,
       label: v.label,
       kind: v.kind,
-      static: v.kind === 'photo',
-      src: v.kind === 'photo' ? v.ref.src : imgPath(product.id, v.id, defaultColour(product))
+      static: v.kind !== 'illustration',
+      src: v.kind === 'actual' ? v.src : imgPath(product.id, v.id, defaultColour(product))
     })),
     imageBase: url('/assets/img/products/'),
     href: url(`/products/${product.id}/`)
@@ -731,7 +709,7 @@ export function productPage(product) {
 
             <div class="pdp__price-row">
               <span class="pdp__price" data-base-price="${product.price}">${raw(formatMoney(product.price))}</span>
-              <span class="pdp__tax">${site.vat.note} Free UK delivery over £150.</span>
+              <span class="pdp__tax">${site.vat.note} Free UK delivery over ${raw(formatMoney(fulfilment.shipping[0].freeOver))}.</span>
             </div>
 
             <p class="small mt-3">
@@ -897,7 +875,7 @@ export function productPage(product) {
 
   return page({
     title: product.name,
-    description: `${product.editorial} ${product.fabricLabel}. ${formatMoney(product.price)}, free UK delivery over £150.`,
+    description: `${product.editorial} ${product.fabricLabel}. ${formatMoney(product.price)}, free UK delivery over ${formatMoney(fulfilment.shipping[0].freeOver)}.`,
     path: `/products/${product.id}/`,
     activeKey: product.type === 'saree' ? 'sarees' : 'blouses-essentials',
     body,
@@ -914,8 +892,8 @@ export function productPage(product) {
       color: product.colour.name,
       offers: {
         '@type': 'Offer',
-        priceCurrency: 'GBP',
-        price: (product.price / 100).toFixed(2),
+        priceCurrency: site.currency,
+        price: String(product.price),
         availability: buyable ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
         url: url(`/products/${product.id}/`)
       }

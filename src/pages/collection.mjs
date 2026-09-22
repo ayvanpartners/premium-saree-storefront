@@ -1,14 +1,14 @@
 import { html, raw, esc, url, icon } from '../lib/html.mjs';
 import { page } from '../lib/layout.mjs';
 import { productCard, breadcrumb, sectionHead, notice, emptyState, sampleTag, occasionImage } from '../lib/components.mjs';
-import { products, collections } from '../data/products.mjs';
+import { products, collections, occasionImagePicks } from '../data/products.mjs';
 import { fabrics, weaves, occasions, colourFamilies, stockStates } from '../data/taxonomy.mjs';
 
 const PRICE_BANDS = [
-  { id: '0-95', label: 'Under £95', min: 0, max: 9500 },
-  { id: '95-195', label: '£95 to £195', min: 9500, max: 19500 },
-  { id: '195-395', label: '£195 to £395', min: 19500, max: 39500 },
-  { id: '395-9999', label: '£395 and above', min: 39500, max: Infinity }
+  { id: '0-2500', label: 'Under ₹2,500', min: 0, max: 2500 },
+  { id: '2500-5000', label: '₹2,500 to ₹5,000', min: 2500, max: 5000 },
+  { id: '5000-10000', label: '₹5,000 to ₹10,000', min: 5000, max: 10000 },
+  { id: '10000-999999', label: '₹10,000 and above', min: 10000, max: Infinity }
 ];
 
 export const SORTS = [
@@ -367,7 +367,7 @@ export function occasionLandingPage() {
         ${occasions.map(
           (o) => raw(`
           <a class="occasion-tile" href="${url(`/collections/${o.id}/`)}">
-            ${occasionImage(o.id)}
+            ${occasionImage(o.id, occasionImagePicks[o.id])}
             <span class="occasion-tile__text">
               <strong>${esc(o.label)}</strong>
               <span>${esc(sarees.filter((p) => p.occasions.includes(o.id)).length)} pieces</span>

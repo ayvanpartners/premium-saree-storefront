@@ -21,3 +21,6 @@ dist/
 # needs: written permission from the supplier, and a build step that
 # emits web-sized derivatives rather than 1MB originals.
 src/assets/images/
+
+# Generated, web-sized derivatives of the ignored supplier photo library.
+src/assets/catalog/

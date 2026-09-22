@@ -8,13 +8,23 @@ import {
   term,
   sampleTag,
   occasionImage,
-  editorialImage,
-  editorialCaption
+  productImage
 } from '../lib/components.mjs';
-import { editorialReference, creditHtml } from '../lib/reference.mjs';
-import { homepageEdit, firstSareePicks, productById } from '../data/products.mjs';
+import {
+  homepageEdit,
+  firstSareePicks,
+  productById,
+  occasionImagePicks,
+  homepageEditorialPicks
+} from '../data/products.mjs';
 import { occasions } from '../data/taxonomy.mjs';
 import { BRAND, site, returnsPolicy } from '../data/site.mjs';
+
+function inventoryPhoto(product, index, alt, { eager = false } = {}) {
+  const image = productImage(product, index);
+  const loading = eager ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"';
+  return `<img src="${image.src}" alt="${esc(alt)}" width="${image.width}" height="${image.height}" ${loading} decoding="async">`;
+}
 
 const OCCASION_BLURB = {
   'wedding-guest': 'Rich, celebratory, not the bride',
@@ -30,19 +40,14 @@ export function homePage() {
     <section class="hero">
       <div class="hero__media">
         ${raw(
-          editorialImage('home-hero', {
-            fallback: '/assets/img/editorial/hero.svg',
-            width: 1600,
-            height: 1000,
-            eager: true
-          })
+          inventoryPhoto(
+            homepageEditorialPicks.hero,
+            1,
+            `${homepageEditorialPicks.hero.name}, actual inventory photograph`,
+            { eager: true }
+          )
         )}
       </div>
-      ${raw(
-        editorialReference('home-hero')
-          ? `<p class="hero__credit">Reference photograph. ${creditHtml(editorialReference('home-hero'))}</p>`
-          : ''
-      )}
       <div class="container hero__inner">
         <div class="hero__box">
           <p class="eyebrow" style="color:#d7b9bf">Handwoven and contemporary</p>
@@ -76,7 +81,7 @@ export function homePage() {
           ${occasions.map(
             (o) => raw(`
             <a class="occasion-tile" href="${url(`/collections/${o.id}/`)}">
-              ${occasionImage(o.id)}
+              ${occasionImage(o.id, occasionImagePicks[o.id])}
               <span class="occasion-tile__text">
                 <strong>${esc(o.label)}</strong>
                 <span>${esc(OCCASION_BLURB[o.id])}</span>
@@ -110,20 +115,13 @@ export function homePage() {
         <div class="editorial">
           <figure>
             ${raw(
-              editorialImage('ready-to-wear', {
-                fallback: '/assets/img/editorial/ready-to-wear.svg',
-                width: 1600,
-                height: 1200
-              })
+              inventoryPhoto(
+                homepageEditorialPicks.readyToWear,
+                1,
+                `${homepageEditorialPicks.readyToWear.name}, actual inventory photograph`
+              )
             )}
-            <figcaption>
-              ${raw(
-                editorialCaption('ready-to-wear', {
-                  photo: 'Reference photograph: a cotton saree worn for an ordinary working day in Mysore. Not a ready-to-wear saree — it stands in until the range is photographed.',
-                  illustration: 'Illustration. The pleats are stitched into a fitted waistband with a concealed side zip.'
-                })
-              )}
-            </figcaption>
+            <figcaption>Actual inventory photograph · ${homepageEditorialPicks.readyToWear.inventoryId}</figcaption>
           </figure>
           <div class="stack-5">
             <div>
@@ -143,7 +141,7 @@ export function homePage() {
             <ul class="stack-2 small">
               <li><strong>Sized to your waist and hip</strong> — check the chart, because the waistband is fitted.</li>
               <li><strong>Blouse is separate</strong> unless the product page says otherwise.</li>
-              <li><strong>Own a saree already?</strong> We can convert it for ${raw('£45')} and about a week.</li>
+              <li><strong>Own a saree already?</strong> We can convert it for ${raw('₹4,500')} and about a week.</li>
             </ul>
             <div class="cluster">
               <a class="btn" href="${url('/collections/ready-to-wear/')}">Shop ready to wear</a>
@@ -160,23 +158,13 @@ export function homePage() {
         <div class="editorial editorial--flip">
           <figure>
             ${raw(
-              editorialImage('weaving-craft', {
-                fallback: '/assets/img/editorial/craft.svg',
-                width: 1600,
-                height: 1200,
-                alt: editorialReference('weaving-craft')
-                  ? 'A weaver at a handloom in Kanchipuram, Tamil Nadu, with silk warp threads stretched across the frame.'
-                  : ''
-              })
+              inventoryPhoto(
+                homepageEditorialPicks.craft,
+                1,
+                `${homepageEditorialPicks.craft.name}, actual inventory photograph`
+              )
             )}
-            <figcaption style="color:#a8a29a">
-              ${raw(
-                editorialCaption('weaving-craft', {
-                  photo: 'Silk saree weaving on a handloom in Kanchipuram, Tamil Nadu.',
-                  illustration: 'Illustration of ikat patterning, where the blur is the evidence of hand work.'
-                })
-              )}
-            </figcaption>
+            <figcaption style="color:#a8a29a">Actual inventory photograph · ${homepageEditorialPicks.craft.inventoryId}</figcaption>
           </figure>
           <div class="stack-5">
             <div>
@@ -311,7 +299,7 @@ export function homePage() {
             <span style="color:var(--wine)">${raw(icon('truck', { size: 28 }))}</span>
             <h3 class="h4">Delivery from Leicester</h3>
             <p class="small muted">
-              Standard tracked delivery is ${raw('£3.95')}, free over ${raw('£150')}. Order before
+              Standard tracked delivery is ${raw('₹395')}, free over ${raw('₹15,000')}. Order before
               ${site.dispatch.cutoffLabel} on a working day and in-stock items leave the same day.
               ${raw(sampleTag('Sample'))}
             </p>
@@ -330,8 +318,8 @@ export function homePage() {
             <span style="color:var(--wine)">${raw(icon('scissors', { size: 28 }))}</span>
             <h3 class="h4">Stitching and finishing</h3>
             <p class="small muted">
-              Blouse stitching from ${raw('£35')}, fall and pico ${raw('£12')}, ready-to-wear
-              conversion ${raw('£45')}. Each one shows its own lead time before you choose it.
+              Blouse stitching from ${raw('₹3,500')}, fall and pico ${raw('₹1,200')}, ready-to-wear
+              conversion ${raw('₹4,500')}. Each one shows its own lead time before you choose it.
             </p>
             <a class="link link--arrow small" href="${url('/saree-guide/tailoring/')}">Tailoring explained</a>
           </div>

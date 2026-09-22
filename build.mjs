@@ -70,18 +70,15 @@ async function writeImage(relPath, svg) {
 await cp(join(SRC, 'assets', 'css'), join(DIST, 'assets', 'css'), { recursive: true });
 await cp(join(SRC, 'assets', 'fonts'), join(DIST, 'assets', 'fonts'), { recursive: true });
 await cp(join(SRC, 'assets', 'js'), join(DIST, 'assets', 'js'), { recursive: true });
+const CATALOG = join(SRC, 'assets', 'catalog');
+if (existsSync(CATALOG)) {
+  await cp(CATALOG, join(DIST, 'assets', 'catalog'), { recursive: true });
+}
 
 /* commerce.mjs is the one module shared between the build and the
  * browser. Copying it rather than duplicating it is the whole point:
  * delivery dates and totals are computed by identical code. */
 await cp(join(SRC, 'lib', 'commerce.mjs'), join(DIST, 'assets', 'js', 'commerce.mjs'));
-
-/* Photographic reference library, when present: the WebP files plus
- * the attribution and manifest files, which must travel with them. */
-const REFERENCE = join(SRC, 'assets', 'img', 'reference');
-if (existsSync(REFERENCE)) {
-  await cp(REFERENCE, join(DIST, 'assets', 'img', 'reference'), { recursive: true });
-}
 
 /* ----------------------------- 2. Imagery ------------------------- */
 function viewSvg(product, view, colour) {
@@ -106,6 +103,7 @@ function viewSvg(product, view, colour) {
 }
 
 for (const product of products) {
+  if (product.images?.length) continue;
   const views = galleryViews(product);
   // Cards need the drape and front views for every colourway; the
   // gallery needs every view, because switching colour swaps the lot.
@@ -120,50 +118,6 @@ for (const product of products) {
       await writeImage(`products/${product.id}__${colour.slug}__front.svg`, viewSvg(product, 'front', colour.slug));
     }
   }
-}
-
-/* Editorial artwork. */
-await writeImage(
-  'editorial/hero.svg',
-  imagery.editorialView('hero-folded-silks', ['#3A1720', '#6E1B2B', '#8A3A2E', '#C89A3C', '#E3C878'], {
-    w: 1600,
-    h: 1000,
-    title: 'Folded lengths of saree silk',
-    desc: 'Abstract vector artwork of folded lengths of saree fabric layered across each other in burgundy, rust and antique gold. Original artwork, not a photograph.'
-  })
-);
-await writeImage(
-  'editorial/ready-to-wear.svg',
-  imagery.editorialView('rtw-pleats', ['#2B2725', '#4A4442', '#8A8C90', '#C6CBD6', '#E8E0D2'], {
-    w: 1600,
-    h: 1200,
-    title: 'Pre-pleated saree, illustrated',
-    desc: 'Abstract vector artwork of evenly pleated fabric fanning from a waistband, in charcoal and silver. Original artwork, not a photograph.'
-  })
-);
-await writeImage(
-  'editorial/craft.svg',
-  imagery.editorialView('craft-ikat', ['#1F3A44', '#C08A2E', '#DDAE52', '#4A2340', '#E8E0D2'], {
-    w: 1600,
-    h: 1200,
-    title: 'Ikat patterning, illustrated',
-    desc: 'Abstract vector artwork of ikat-style bands with deliberately blurred edges, in teal, ochre and aubergine. Original artwork, not a photograph.'
-  })
-);
-
-/* Occasion tiles. */
-const OCCASION_PALETTES = {
-  'wedding-guest': ['#7A1F2E', '#9C3040', '#C89A3C', '#E3C878'],
-  bridal: ['#6E1B2B', '#8A2438', '#C89A3C', '#E3C878'],
-  festive: ['#C08A2E', '#D89A2E', '#B5342A', '#F1E9DA'],
-  party: ['#20263C', '#39415E', '#C6CBD6', '#E8E0D2'],
-  everyday: ['#C9B295', '#DCCBB2', '#7C7F4E', '#F5EFE5']
-};
-for (const occasion of occasions) {
-  await writeImage(
-    `occasions/${occasion.id}.svg`,
-    imagery.occasionTile(occasion.id, OCCASION_PALETTES[occasion.id], occasion.label)
-  );
 }
 
 /* Guide diagrams. */
@@ -226,7 +180,7 @@ const index = {
     services: p.services,
     editorial: p.editorial,
     tags: [p.composition, p.provenance.short, p.origin].filter(Boolean),
-    image: imgPath(p.id, 'drape', defaultColour(p)).replace(/^/, ''),
+    image: p.images?.[0] ? url(p.images[0].src) : imgPath(p.id, 'drape', defaultColour(p)).replace(/^/, ''),
     href: url(`/products/${p.id}/`)
   }))
 };

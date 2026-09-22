@@ -234,9 +234,9 @@ export function firstSareePage() {
             <p class="small muted mb-4">Including a blouse and petticoat if you need them.</p>
             <div class="quiz__options quiz__options--2">
               ${[
-                ['0-12000', 'Up to £120', ''],
-                ['0-20000', 'Up to £200', ''],
-                ['0-40000', 'Up to £400', ''],
+                ['0-12000', 'Up to ₹12,000', ''],
+                ['0-20000', 'Up to ₹20,000', ''],
+                ['0-40000', 'Up to ₹40,000', ''],
                 ['0-99999', 'No limit', '']
               ].map(
                 ([v, label, note]) => raw(`

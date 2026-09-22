@@ -11,14 +11,11 @@
  * Browser-safe: no Node imports, no DOM access.
  * ------------------------------------------------------------------ */
 
-export function formatMoney(pence, { showFree = false } = {}) {
-  if (pence === 0 && showFree) return 'Free';
-  const sign = pence < 0 ? '−' : '';
-  const abs = Math.abs(pence);
-  const whole = Math.floor(abs / 100);
-  const frac = abs % 100;
-  const grouped = whole.toLocaleString('en-GB');
-  return `${sign}£${grouped}.${String(frac).padStart(2, '0')}`;
+export function formatMoney(rupees, { showFree = false } = {}) {
+  if (rupees === 0 && showFree) return 'Free';
+  const sign = rupees < 0 ? '−' : '';
+  const grouped = Math.round(Math.abs(rupees)).toLocaleString('en-IN');
+  return `${sign}₹${grouped}`;
 }
 
 /* UK bank holidays — SAMPLE DATA for England and Wales, covering the
@@ -124,7 +121,7 @@ export function formatWindow(earliest, latest) {
 export const discountCodes = {
   WELCOME10: { type: 'percent', value: 10, label: '10% off your first order', minSpend: 0 },
   FREEPOST: { type: 'shipping', value: 0, label: 'Free standard delivery', minSpend: 5000 },
-  DRAPE25: { type: 'fixed', value: 2500, label: '£25 off orders over £200', minSpend: 20000 }
+  DRAPE25: { type: 'fixed', value: 2500, label: '₹2,500 off orders over ₹20,000', minSpend: 20000 }
 };
 
 export function lineTotal(line) {

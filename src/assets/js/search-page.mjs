@@ -152,7 +152,7 @@ function renderEmpty(result, data, query) {
       <div class="empty-state__suggest">
         <h3 class="h4 mb-4">Things that always return something</h3>
         <div class="search-suggest mb-5">
-          ${['silk', 'cotton', 'georgette', 'Banarasi', 'ikat', 'wedding guest', 'ready to wear', 'under £100']
+          ${['silk', 'cotton', 'georgette', 'Banarasi', 'ikat', 'wedding guest', 'ready to wear', 'under ₹5,000']
             .map((t) => `<a href="?q=${encodeURIComponent(t)}">${t}</a>`)
             .join('')}
         </div>

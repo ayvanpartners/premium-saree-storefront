@@ -91,7 +91,7 @@ function normalise(s) {
     .toLowerCase()
     .normalize('NFKD')
     .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9£\s-]/g, ' ')
+    .replace(/[^a-z0-9₹\s-]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -159,14 +159,14 @@ function buildHaystacks(productList) {
   return haystacks;
 }
 
-/** Parse "under £100", "£95-195" and similar out of a query. */
+/** Parse "under ₹5000", "₹2500-5000" and similar out of a query. */
 function parsePrice(query) {
-  const under = query.match(/(?:under|below|less than|up to)\s*£?\s*(\d+)/);
-  if (under) return { max: Number(under[1]) * 100 };
-  const over = query.match(/(?:over|above|more than)\s*£?\s*(\d+)/);
-  if (over) return { min: Number(over[1]) * 100 };
-  const range = query.match(/£?\s*(\d+)\s*(?:-|to)\s*£?\s*(\d+)/);
-  if (range) return { min: Number(range[1]) * 100, max: Number(range[2]) * 100 };
+  const under = query.match(/(?:under|below|less than|up to)\s*₹?\s*(\d+)/);
+  if (under) return { max: Number(under[1]) };
+  const over = query.match(/(?:over|above|more than)\s*₹?\s*(\d+)/);
+  if (over) return { min: Number(over[1]) };
+  const range = query.match(/₹?\s*(\d+)\s*(?:-|to)\s*₹?\s*(\d+)/);
+  if (range) return { min: Number(range[1]), max: Number(range[2]) };
   return null;
 }
 
