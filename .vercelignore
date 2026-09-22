@@ -1,0 +1,10 @@
+.git
+.github
+.cache
+dist
+node_modules
+*.log
+
+# Never upload the 2.7 GB supplier originals. The optimized catalogue below
+# is intentionally included for production deployments from this workspace.
+src/assets/images

@@ -24,3 +24,5 @@ src/assets/images/
 
 # Generated, web-sized derivatives of the ignored supplier photo library.
 src/assets/catalog/
+
+.vercel
