@@ -1,4 +1,5 @@
 import { inventoryRecords } from './inventory-records.mjs';
+import { classifyInventoryItem } from './inventory-classification.mjs';
 
 /* ------------------------------------------------------------------ *
  * Product catalogue.
@@ -1329,16 +1330,17 @@ const sampleProducts = [
 
 const inventoryProducts = inventoryRecords.map((item) => {
   const palette = [item.colourHex, '#E7D8BA', '#C89A3C', '#6B4A38', '#F7F3EB'];
+  const classification = classifyInventoryItem(item);
   return saree({
     id: item.id,
     inventoryId: item.sku,
     name: item.name,
-    fabric: 'silk-blend',
-    fabricLabel: 'Catalogued saree — fibre content to be confirmed',
-    composition: 'Fibre content pending supplier confirmation',
+    fabric: classification.fabric.id,
+    fabricLabel: classification.fabric.label,
+    composition: classification.fabric.composition,
     weave: 'none',
     provenance: PROVENANCE.contemporary,
-    occasions: ['festive', 'wedding-guest', 'party'],
+    occasions: [classification.occasion],
     price: item.price,
     colour: { name: item.colourName, family: item.colourFamily, hex: item.colourHex },
     colours: [{ slug: 'catalogued', name: item.colourName, hex: item.colourHex, stock: 'in-stock' }],
@@ -1357,7 +1359,7 @@ const inventoryProducts = inventoryRecords.map((item) => {
     palette,
     editorial: `${item.colourName} with ${item.pattern} and ${item.border}. Inventory ${item.sku}.`,
     description: item.description,
-    honest: 'These photographs show the actual catalogued item. Fibre content, measurements and provenance still need supplier confirmation.',
+    honest: 'These photographs show the actual catalogued item. The fabric family is a visual assessment, not a fibre-content guarantee; composition, measurements and provenance still need supplier confirmation.',
     styling: `Pair with a blouse that picks up the ${item.colourName.toLowerCase()} palette or the border tone.`,
     services: ['fallPico', 'blouseStitching', 'readyToWearConversion'],
     images: item.images,
@@ -1408,7 +1410,7 @@ export const collections = {
   },
   sarees: {
     title: 'Shop Sarees',
-    strapline: 'Every saree we stock, from handloom cotton to bridal silk.',
+    strapline: 'Every saree we stock, from lighter daywear to premium occasion silks.',
     intro:
       'Filter by fabric if you know how you want it to feel, by occasion if you know where you are wearing it, or by weave if you are looking for a specific tradition. Every term is explained where it appears.',
     filter: (p) => p.type === 'saree'
@@ -1455,9 +1457,9 @@ export const collections = {
   },
   everyday: {
     title: 'Everyday Sarees',
-    strapline: 'Cotton and linen you can actually wear to work.',
+    strapline: 'Lighter, simpler sarees for an ordinary day.',
     intro:
-      'Breathable, mostly washable, and comfortable for a full day. These are also the easiest sarees to learn to drape, because cotton grips itself instead of sliding.',
+      'Selected from the catalogue for simpler patterns, restrained borders and accessible price points. Check the visually assessed fabric family on each product page; exact fibre content still awaits supplier confirmation.',
     filter: (p) => p.occasions.includes('everyday') && p.type === 'saree'
   },
   occasion: {
