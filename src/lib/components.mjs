@@ -5,7 +5,6 @@
 import { html, raw, esc, url, icon, attrs, cls } from './html.mjs';
 import { formatMoney } from './commerce.mjs';
 import { fabricById, weaveById, occasionById, stockStates, drapeDifficulty } from '../data/taxonomy.mjs';
-import { productReference, occasionReference, editorialReference, creditHtml } from './reference.mjs';
 
 /* ------------------------------ Images ---------------------------- */
 export function imgPath(productId, view, colourSlug) {
@@ -14,21 +13,33 @@ export function imgPath(productId, view, colourSlug) {
 
 /** The colourway a card or gallery opens on: the first one that is
  * actually buyable, so we never lead with something out of stock. */
+export function productImage(product, index = 0) {
+  if (product.images && product.images.length) {
+    const image = product.images[Math.min(index, product.images.length - 1)];
+    return { ...image, src: url(image.src), actual: true };
+  }
+  const view = index === 0 ? 'drape' : 'front';
+  return { src: imgPath(product.id, view, defaultColour(product)), width: 900, height: 1200, actual: false };
+}
+
 export function defaultColour(product) {
   const first = product.colours.find((c) => c.stock !== 'out-of-stock');
   return (first || product.colours[0]).slug;
 }
 
-/** Views in gallery order. `blouse` is skipped when there is no blouse
- * piece to show — a gallery slot promising something not in the parcel
- * is exactly the confusion we are trying to remove.
- *
- * When the reference library has a photograph for the product it
- * leads the gallery, marked `kind: 'photo'`. It is a comparable piece,
- * not the item for sale, and the product page labels it as such. */
+/** Views in gallery order. Inventory products return their actual photos.
+ * Sample essentials retain generated illustrations. */
 export function galleryViews(product) {
-  const ref = productReference(product.id);
-  const lead = ref ? [{ id: 'reference', label: 'Reference photograph', kind: 'photo', ref }] : [];
+  if (product.images && product.images.length) {
+    return product.images.map((image, index) => ({
+      id: `actual-${index + 1}`,
+      label: image.label || `Product view ${index + 1}`,
+      kind: 'actual',
+      src: url(image.src),
+      width: image.width,
+      height: image.height
+    }));
+  }
   const illustration = (id, label) => ({ id, label, kind: 'illustration' });
 
   let views;
@@ -52,37 +63,16 @@ export function galleryViews(product) {
     ];
     if (product.blousePiece.included) views.push(illustration('blouse', 'The included blouse piece'));
   }
-  return [...lead, ...views];
+  return views;
 }
 
 /* ------------------- Reference photographs in slots --------------- */
 
-/** Occasion tile image: the reference photograph when one exists,
- * otherwise the generated tile. Decorative — the tile carries its own
- * text label — so alt is empty; credit lives on /image-credits/. */
-export function occasionImage(occasionId) {
-  const ref = occasionReference(occasionId);
-  if (ref) {
-    return `<img src="${ref.src}" alt="" width="${ref.width}" height="${ref.height}" loading="lazy" decoding="async">`;
-  }
-  return `<img src="${url(`/assets/img/occasions/${occasionId}.svg`)}" alt="" width="800" height="800" loading="lazy" decoding="async">`;
-}
-
-/** Editorial slot image with a generated fallback. */
-export function editorialImage(slot, { fallback, width, height, alt = '', eager = false }) {
-  const ref = editorialReference(slot);
-  const src = ref ? ref.src : url(fallback);
-  const w = ref ? ref.width : width;
-  const h = ref ? ref.height : height;
-  const loading = eager ? 'fetchpriority="high"' : 'loading="lazy"';
-  return `<img src="${src}" alt="${esc(alt)}" width="${w}" height="${h}" ${loading} decoding="async">`;
-}
-
-/** Caption for an editorial slot: the photo's own description and
- * credit when a reference is used, otherwise the illustration text. */
-export function editorialCaption(slot, { photo, illustration }) {
-  const ref = editorialReference(slot);
-  return ref ? `${esc(photo)} ${creditHtml(ref)}` : esc(illustration);
+/** An occasion tile selected from the live SS inventory. */
+export function occasionImage(occasionId, product) {
+  if (!product) return '';
+  const image = productImage(product, product.images.length > 1 ? 1 : 0);
+  return `<img src="${image.src}" alt="${esc(`${product.name}, actual product photograph`)}" width="${image.width}" height="${image.height}" loading="lazy" decoding="async">`;
 }
 
 /* ------------------------------ Labels ---------------------------- */
@@ -153,6 +143,8 @@ export function productCard(product, { eager = false, index = 0 } = {}) {
 
   const shownSwatches = product.colours.slice(0, 4);
   const extraSwatches = product.colours.length - shownSwatches.length;
+  const primaryImage = productImage(product, 0);
+  const secondaryImage = productImage(product, 1);
 
   return html`
     <article
@@ -178,18 +170,18 @@ export function productCard(product, { eager = false, index = 0 } = {}) {
           ${raw(!buyable ? badge('Out of stock', 'off') : '')}
         </div>
         <img
-          src="${imgPath(product.id, 'drape', defaultColour(product))}"
-          alt="${esc(product.name)} shown draped on a figure. Illustration."
-          width="900"
-          height="1200"
+          src="${primaryImage.src}"
+          alt="${esc(product.name)}${primaryImage.actual ? ', actual product photograph.' : ' shown draped on a figure. Illustration.'}"
+          width="${primaryImage.width}"
+          height="${primaryImage.height}"
           ${raw(eager ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"')}
           decoding="async"
         />
         <img
-          src="${imgPath(product.id, 'front', defaultColour(product))}"
+          src="${secondaryImage.src}"
           alt=""
-          width="900"
-          height="1200"
+          width="${secondaryImage.width}"
+          height="${secondaryImage.height}"
           loading="lazy"
           decoding="async"
           aria-hidden="true"

@@ -206,7 +206,7 @@ function initSearch() {
       <div class="search-results__group">
         <h3>Popular searches</h3>
         <div class="search-suggest">
-          ${['silk saree', 'Banarasi', 'wedding guest', 'ready to wear', 'cotton', 'under £100']
+          ${['silk saree', 'Banarasi', 'wedding guest', 'ready to wear', 'cotton', 'under ₹5,000']
             .map((t) => `<a href="#" data-suggest="${t}">${t}</a>`)
             .join('')}
         </div>

@@ -1,3 +1,5 @@
+import { inventoryRecords } from './inventory-records.mjs';
+
 /* ------------------------------------------------------------------ *
  * Product catalogue.
  *
@@ -8,7 +10,7 @@
  * product page prints it word for word rather than paraphrasing it
  * into a heritage story.
  *
- * Prices are in pence to avoid floating-point rounding.
+ * Prices are stored as whole Indian rupees.
  * ------------------------------------------------------------------ */
 
 const PROVENANCE = {
@@ -94,13 +96,13 @@ function buildExcluded(p) {
   }
   if (!p.blousePiece.included) list.push('A blouse or blouse piece of any kind.');
   if (!p.petticoat.included && p.petticoat.required) {
-    list.push('A petticoat. This fabric needs one underneath — we sell them from £22.');
+    list.push('A petticoat. This fabric needs one underneath — we sell them from ₹2,200.');
   }
   list.push('The jewellery and footwear shown in the styling images.');
   return list;
 }
 
-export const products = [
+const sampleProducts = [
   /* ------------------------------ Silk ----------------------------- */
   saree({
     id: 'meenakshi-kanjivaram',
@@ -1322,7 +1324,48 @@ export const products = [
     excluded: [],
     sizeGuideNote: null
   }
+
 ];
+
+const inventoryProducts = inventoryRecords.map((item) => {
+  const palette = [item.colourHex, '#E7D8BA', '#C89A3C', '#6B4A38', '#F7F3EB'];
+  return saree({
+    id: item.id,
+    inventoryId: item.sku,
+    name: item.name,
+    fabric: 'silk-blend',
+    fabricLabel: 'Catalogued saree — fibre content to be confirmed',
+    composition: 'Fibre content pending supplier confirmation',
+    weave: 'none',
+    provenance: PROVENANCE.contemporary,
+    occasions: ['festive', 'wedding-guest', 'party'],
+    price: item.price,
+    colour: { name: item.colourName, family: item.colourFamily, hex: item.colourHex },
+    colours: [{ slug: 'catalogued', name: item.colourName, hex: item.colourHex, stock: 'in-stock' }],
+    stock: 'in-stock',
+    isNew: item.isNew,
+    blousePiece: { included: false, lengthCm: null, stitched: false },
+    attributes: {
+      sheerness: 'Not yet assessed',
+      texture: `${item.pattern} with ${item.border}`,
+      weightGsm: 250,
+      weightLabel: 'Weight not yet recorded',
+      drapeDifficulty: 3
+    },
+    care: 'Care instructions are pending supplier confirmation. Dry clean until confirmed.',
+    patternFamily: 'plain-border',
+    palette,
+    editorial: `${item.colourName} with ${item.pattern} and ${item.border}. Inventory ${item.sku}.`,
+    description: item.description,
+    honest: 'These photographs show the actual catalogued item. Fibre content, measurements and provenance still need supplier confirmation.',
+    styling: `Pair with a blouse that picks up the ${item.colourName.toLowerCase()} palette or the border tone.`,
+    services: ['fallPico', 'blouseStitching', 'readyToWearConversion'],
+    images: item.images,
+    sourceFiles: item.sourceFiles
+  });
+});
+
+export const products = [...inventoryProducts, ...sampleProducts.filter((product) => product.type !== 'saree')];
 
 /* ---------------------------- Derived ----------------------------- */
 
@@ -1332,20 +1375,28 @@ export const sarees = products.filter((p) => p.type === 'saree');
 export const essentials = products.filter((p) => p.type !== 'saree');
 
 /* Curated homepage selection, chosen by hand rather than by algorithm. */
-export const homepageEdit = [
-  'anaya-banarasi-brocade',
-  'devi-mysore-crepe',
-  'neela-jamdani',
-  'tara-organza-ribbonwork',
-  'padma-tussar',
-  'saanvi-georgette'
-].map((id) => productById[id]);
+export const homepageEdit = inventoryProducts.slice(0, 6);
 
 /* Sarees we are comfortable recommending to somebody who has never
  * worn one: light, grippy, and forgiving of imperfect pleating. */
-export const firstSareePicks = ['uma-handloom-cotton', 'saanvi-georgette', 'gauri-maheshwari', 'mira-rtw-georgette'].map(
-  (id) => productById[id]
-);
+export const firstSareePicks = inventoryProducts.slice(6, 10);
+
+/* Real inventory photographs used outside product cards. Keeping the
+ * selection here means the homepage and occasion landing page cannot
+ * drift back to the retired reference-photo library. */
+export const occasionImagePicks = {
+  'wedding-guest': productById['ss-0146'],
+  bridal: productById['ss-0142'],
+  festive: productById['ss-0207'],
+  party: productById['ss-0180'],
+  everyday: productById['ss-0188']
+};
+
+export const homepageEditorialPicks = {
+  hero: productById['ss-0203'],
+  readyToWear: productById['ss-0144'],
+  craft: productById['ss-0157']
+};
 
 export const collections = {
   'new-arrivals': {

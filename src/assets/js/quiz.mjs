@@ -120,7 +120,7 @@ function render(picks, a) {
         <div class="empty-state__suggest">
           <h3 class="h4 mb-4">What we would change</h3>
           <ul class="stack-2 small">
-            <li><strong>Raise the budget by one step.</strong> Most occasions have something between £95 and £195.</li>
+            <li><strong>Raise the budget by one step.</strong> Most occasions have something between ₹2,500 and ₹10,000.</li>
             <li><strong>Reconsider ready to wear.</strong> If you ticked "would rather not learn", the pre-pleated range is small but it is the quickest route.</li>
             <li><strong>Try "happy to try, but forgiving"</strong> instead — cotton and georgette are genuinely easy, and it opens up a lot more.</li>
           </ul>

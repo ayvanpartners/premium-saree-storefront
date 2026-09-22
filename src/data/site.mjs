@@ -14,8 +14,8 @@ export const BRAND = '[BRAND NAME]';
 export const site = {
   brand: BRAND,
   tagline: 'Handwoven and contemporary sarees, delivered across the United Kingdom.',
-  locale: 'en-GB',
-  currency: 'GBP',
+  locale: 'en-IN',
+  currency: 'INR',
   sample: true,
   studio: {
     line1: 'Unit 4, Fairfield Works',
@@ -155,10 +155,10 @@ export const nav = [
         {
           heading: 'By price',
           links: [
-            { label: 'Under £95', href: '/collections/sarees/?price=0-95' },
-            { label: '£95 to £195', href: '/collections/sarees/?price=95-195' },
-            { label: '£195 to £395', href: '/collections/sarees/?price=195-395' },
-            { label: '£395 and above', href: '/collections/sarees/?price=395-9999' }
+            { label: 'Under ₹2,500', href: '/collections/sarees/?price=0-2500' },
+            { label: '₹2,500 to ₹5,000', href: '/collections/sarees/?price=2500-5000' },
+            { label: '₹5,000 to ₹10,000', href: '/collections/sarees/?price=5000-10000' },
+            { label: '₹10,000 and above', href: '/collections/sarees/?price=10000-999999' }
           ]
         }
       ],
@@ -320,7 +320,7 @@ export const footer = [
 ];
 
 /* Optional services ------------------------------------------------ *
- * Prices in pence. Never preselected anywhere in the UI.
+ * Prices in whole Indian rupees. Never preselected anywhere in the UI.
  * ------------------------------------------------------------------ */
 export const services = {
   fallPico: {
@@ -365,7 +365,7 @@ export const paymentMethods = [
 
 /* Service strip: factual, non-promissory statements only. */
 export const serviceStrip = [
-  { text: 'Free UK delivery over £150', href: '/delivery/' },
+  { text: 'Free UK delivery over ₹15,000', href: '/delivery/' },
   { text: 'Dispatched from Leicester', href: '/delivery/#dispatch' },
   { text: 'Free 30-day UK returns', href: '/returns/' },
   { text: 'Stitching and fall & pico available', href: '/saree-guide/tailoring/' }

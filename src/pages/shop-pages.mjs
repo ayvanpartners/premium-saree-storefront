@@ -29,7 +29,7 @@ export function bagPage() {
                   <ul class="stack-2 small">
                     <li><a class="link" href="${url('/saree-guide/first-saree/')}">Find your first saree</a> — four questions, then a short list.</li>
                     <li><a class="link" href="${url('/collections/ready-to-wear/')}">Ready to wear</a> — no draping needed.</li>
-                    <li><a class="link" href="${url('/collections/everyday/')}">Everyday cotton</a> — from £78, machine washable.</li>
+                    <li><a class="link" href="${url('/collections/everyday/')}">Everyday cotton</a> — from ₹1,500, machine washable.</li>
                   </ul>`
               })
             )}
@@ -62,8 +62,8 @@ export function bagPage() {
                 <p class="field__error" data-discount-error data-error-for="discount" hidden></p>
                 <p class="field__ok" data-discount-ok hidden></p>
                 <p class="xs muted mt-2">
-                  Demonstration codes: <code>WELCOME10</code>, <code>FREEPOST</code> (over £50),
-                  <code>DRAPE25</code> (over £200). ${raw(sampleTag('Sample'))}
+                  Demonstration codes: <code>WELCOME10</code>, <code>FREEPOST</code> (over ₹5,000),
+                  <code>DRAPE25</code> (over ₹20,000). ${raw(sampleTag('Sample'))}
                 </p>
               </div>
             </div>
@@ -176,7 +176,7 @@ export function wishlistPage() {
 
 /* ------------------------------ Search ---------------------------- */
 export function searchPage() {
-  const popular = ['silk saree', 'Banarasi', 'wedding guest', 'ready to wear', 'cotton', 'organza', 'under £100'];
+  const popular = ['silk saree', 'Banarasi', 'wedding guest', 'ready to wear', 'cotton', 'organza', 'under ₹5,000'];
 
   const body = html`
     <div class="container">
