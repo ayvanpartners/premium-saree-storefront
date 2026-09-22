@@ -41,7 +41,7 @@ function filterGroup({ id, legend, hint, options, open = true, type = 'checkbox'
         ${raw(hint ? `<p class="filter-group__hint">${esc(hint)}</p>` : '')}
         <fieldset class="fieldset">
           <legend class="visually-hidden">${esc(legend)}</legend>
-          ${options.map((o) =>
+          ${live.map((o) =>
             raw(
               type === 'swatch'
                 ? `<label class="filter-swatch${o.id === 'multi' ? ' filter-swatch--multi' : ''}">

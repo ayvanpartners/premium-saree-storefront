@@ -9,6 +9,13 @@
 
 export const fabrics = [
   {
+    id: 'art-silk',
+    label: 'Art silk',
+    plain: 'A lustrous woven fabric with the look of silk. For this supplier catalogue the classification is visual until fibre content is confirmed.',
+    wearNote: 'Usually light, affordable and suitable for colourful festive dressing.',
+    ease: 'Visual assessment — exact composition to be confirmed.'
+  },
+  {
     id: 'silk',
     label: 'Silk',
     plain: 'Lustrous and smooth with a natural sheen. Holds a sharp pleat and has weight, so it stays where you put it.',
@@ -63,6 +70,13 @@ export const fabrics = [
     plain: 'Silk mixed with another fibre to cut the weight and the price while keeping much of the sheen.',
     wearNote: 'Lighter than pure silk and usually easier to look after.',
     ease: 'Moderate.'
+  },
+  {
+    id: 'silk-cotton',
+    label: 'Silk–cotton',
+    plain: 'A silk-look woven fabric with a drier, lighter handle associated with silk–cotton. For this supplier catalogue the classification is visual until fibre content is confirmed.',
+    wearNote: 'Balances the sheen and structure of silk with a lighter, more breathable drape.',
+    ease: 'Visual assessment — exact composition to be confirmed.'
   }
 ];
 
@@ -212,8 +226,8 @@ export const occasions = [
   {
     id: 'everyday',
     label: 'Everyday',
-    plain: 'Cotton and linen sarees you can wear to work, to teach in, or to wear around the house.',
-    blurb: 'Breathable, washable and comfortable for a full day.'
+    plain: 'Lighter sarees with simpler weaves and borders for work, teaching or an informal day out.',
+    blurb: 'Straightforward designs selected for comfortable, lower-key daywear.'
   }
 ];
 

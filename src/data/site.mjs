@@ -132,12 +132,10 @@ export const nav = [
         {
           heading: 'By fabric',
           links: [
-            { label: 'Silk', href: '/collections/sarees/?fabric=silk', hint: 'Lustrous and structured' },
-            { label: 'Cotton', href: '/collections/sarees/?fabric=cotton', hint: 'Breathable, easy to wear' },
-            { label: 'Chiffon', href: '/collections/sarees/?fabric=chiffon', hint: 'Light and fluid' },
-            { label: 'Georgette', href: '/collections/sarees/?fabric=georgette', hint: 'Soft crepe fall, forgiving' },
-            { label: 'Organza', href: '/collections/sarees/?fabric=organza', hint: 'Crisp and sheer' },
-            { label: 'Linen', href: '/collections/sarees/?fabric=linen', hint: 'Textured and matte' }
+            { label: 'Art silk', href: '/collections/sarees/?fabric=art-silk', hint: 'Affordable, lustrous woven styles' },
+            { label: 'Silk blend', href: '/collections/sarees/?fabric=silk-blend', hint: 'Sheen with a lighter drape' },
+            { label: 'Silk–cotton', href: '/collections/sarees/?fabric=silk-cotton', hint: 'Lighter, drier and more breathable' },
+            { label: 'Premium silk', href: '/collections/sarees/?fabric=silk', hint: 'Structured, substantial occasion sarees' }
           ]
         },
         {
@@ -182,7 +180,7 @@ export const nav = [
             { label: 'Bridal', href: '/collections/bridal/', hint: 'Heavier weaves, full drapes' },
             { label: 'Festive', href: '/collections/festive/', hint: 'Diwali, Navratri, Eid, Pongal' },
             { label: 'Party', href: '/collections/party/', hint: 'Evenings and receptions' },
-            { label: 'Everyday', href: '/collections/everyday/', hint: 'Cotton and linen for work' }
+            { label: 'Everyday', href: '/collections/everyday/', hint: 'Simpler, lighter daywear designs' }
           ]
         },
         {
